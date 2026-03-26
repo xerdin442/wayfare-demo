@@ -6,13 +6,13 @@ import { twMerge } from "tailwind-merge"
 export const DriverMarker = new L.Icon({
   iconUrl: "/car.png",
   iconSize: [30, 30],
-  iconAnchor: [15, 30],
+  iconAnchor: [15, 15],
 });
 
 export const TripPickupMarker = new L.Icon({
   iconUrl: "/user.png",
   iconSize: [30, 40],
-  iconAnchor: [20, 40],
+  iconAnchor: [15, 40],
 });
 
 export const TripDestinationMarker = new L.Icon({

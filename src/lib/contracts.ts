@@ -75,9 +75,8 @@ interface DriverLocationRequest {
 interface DriverResponseToTripRequest {
   type: TripEvents.DriverTripAccept | TripEvents.DriverTripDecline;
   data: {
-    tripID: string;
-    riderID: string;
-    driver: Driver;
+    trip: Trip;
+    driver?: Driver;
   };
 }
 
