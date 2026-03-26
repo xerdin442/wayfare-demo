@@ -41,10 +41,6 @@ export interface RouteFare {
 	route: Route,
 }
 
-export interface HTTPTripStartResponse {
-	tripID: string;
-}
-
 export interface TripPreview {
 	tripID: string,
 	route: [number, number][],
@@ -60,4 +56,11 @@ export interface Driver {
 	name: string;
 	profilePicture: string;
 	carPlate: string;
+}
+
+export interface PaymentSession {
+	tripID: string;
+	sessionID: string;
+	amount: number;
+	currency: string;
 }

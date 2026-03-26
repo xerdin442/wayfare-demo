@@ -1,13 +1,13 @@
 import { WEBSOCKET_URL } from '@/lib/constants';
-import { TripEvents, PaymentEventSessionCreatedData, BackendEndpoints, ServerWsMessage, isValidWsMessage } from '@/lib/contracts';
-import { Driver, Trip } from '@/lib/types';
+import { TripEvents, BackendEndpoints, ServerWsMessage, isValidWsMessage } from '@/lib/contracts';
+import { Driver, PaymentSession } from '@/lib/types';
 import { useEffect, useState } from 'react';
 
 export function useRiderStreamConnection(userID: string) {
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [tripStatus, setTripStatus] = useState<TripEvents | null>(null);
-  const [paymentSession, setPaymentSession] = useState<PaymentEventSessionCreatedData | null>(null);
-  const [assignedDriver, setAssignedDriver] = useState<Trip["driver"] | null>(null);
+  const [paymentSession, setPaymentSession] = useState<PaymentSession | null>(null);
+  const [assignedDriver, setAssignedDriver] = useState<Driver>();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -24,7 +24,7 @@ export function useRiderStreamConnection(userID: string) {
       }
 
       switch (message.type) {
-        case TripEvents.DriverLocation:
+        case TripEvents.AvailableDrivers:
           setDrivers(message.data);
           break;
         case TripEvents.PaymentSessionCreated:
@@ -33,9 +33,6 @@ export function useRiderStreamConnection(userID: string) {
           break;
         case TripEvents.DriverAssigned:
           setAssignedDriver(message.data.driver);
-          setTripStatus(message.type);
-          break;
-        case TripEvents.Created:
           setTripStatus(message.type);
           break;
         case TripEvents.NoDriversFound:

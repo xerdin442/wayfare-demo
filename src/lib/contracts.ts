@@ -1,4 +1,4 @@
-import { Trip, Driver, RouteFare, Coordinate, Route } from "./types";
+import { Trip, Driver, RouteFare, Coordinate, Route, PaymentSession } from "./types";
 
 export enum BackendEndpoints {
   PREVIEW_TRIP = "/trip/preview",
@@ -10,69 +10,53 @@ export enum BackendEndpoints {
 export enum TripEvents {
   NoDriversFound = "trip.event.no_drivers_found",
   DriverAssigned = "trip.event.driver_assigned",
-  Completed = "trip.event.completed",
-  Cancelled = "trip.event.cancelled",
-  Created = "trip.event.created",
-  DriverLocation = "driver.cmd.location",
-  DriverTripRequest = "driver.cmd.trip_request",
+  AvailableDrivers = "trip.event.available_drivers",
+  TripCompleted = "trip.cmd.completed",
+  TripCancelled = "trip.cmd.cancelled",
+  DriverTripRequest = "driver.event.trip_request",
+  DriverLocationUpdate = "driver.cmd.location_update",
   DriverTripAccept = "driver.cmd.trip_accept",
   DriverTripDecline = "driver.cmd.trip_decline",
-  DriverRegister = "driver.cmd.register",
   PaymentSessionCreated = "payment.event.session_created",
 }
 
 export type ServerWsMessage =
-  | PaymentSessionCreatedRequest
-  | DriverAssignedRequest
-  | DriverLocationRequest
-  | DriverTripRequest
-  | DriverRegisterRequest
-  | TripCreatedRequest
-  | NoDriversFoundRequest;
+  | PaymentSessionCreatedResponse
+  | DriverAssignedResponse
+  | AvailableDriversResponse
+  | DriverTripAvailableResponse
+  | NoDriversFoundResponse;
 
-export type ClientWsMessage = DriverResponseToTripRequest
+export type ClientWsMessage =
+  | DriverTripActionRequest
+  | DriverLocationUpdateRequest
+  | RiderTripUpdateRequest
 
-interface TripCreatedRequest {
-  type: TripEvents.Created;
-  data: Trip;
+interface PaymentSessionCreatedResponse {
+  type: TripEvents.PaymentSessionCreated;
+  data: PaymentSession;
 }
 
-interface NoDriversFoundRequest {
+interface NoDriversFoundResponse {
   type: TripEvents.NoDriversFound;
 }
 
-interface DriverRegisterRequest {
-  type: TripEvents.DriverRegister;
-  data: Driver;
-}
-interface DriverTripRequest {
+interface DriverTripAvailableResponse {
   type: TripEvents.DriverTripRequest;
   data: Trip;
 }
 
-export interface PaymentEventSessionCreatedData {
-  tripID: string;
-  sessionID: string;
-  amount: number;
-  currency: string;
-}
-
-interface PaymentSessionCreatedRequest {
-  type: TripEvents.PaymentSessionCreated;
-  data: PaymentEventSessionCreatedData;
-}
-
-interface DriverAssignedRequest {
+interface DriverAssignedResponse {
   type: TripEvents.DriverAssigned;
   data: Trip;
 }
 
-interface DriverLocationRequest {
-  type: TripEvents.DriverLocation;
+interface AvailableDriversResponse {
+  type: TripEvents.AvailableDrivers;
   data: Driver[];
 }
 
-interface DriverResponseToTripRequest {
+interface DriverTripActionRequest {
   type: TripEvents.DriverTripAccept | TripEvents.DriverTripDecline;
   data: {
     trip: Trip;
@@ -80,9 +64,26 @@ interface DriverResponseToTripRequest {
   };
 }
 
+interface DriverLocationUpdateRequest {
+  type: TripEvents.DriverLocationUpdate;
+  data: {
+    location: Coordinate;
+    geohash: string;
+  }
+}
+
+interface RiderTripUpdateRequest {
+  type: TripEvents.TripCompleted | TripEvents.TripCancelled
+  data: { tripID: string }
+}
+
 export interface HTTPTripPreviewResponse {
   route: Route;
   rideFares: RouteFare[];
+}
+
+export interface HTTPTripStartResponse {
+  tripID: string;
 }
 
 export interface HTTPTripStartRequestPayload {

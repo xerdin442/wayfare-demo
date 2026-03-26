@@ -1,7 +1,14 @@
 import { WEBSOCKET_URL } from '@/lib/constants';
-import { TripEvents, BackendEndpoints, ServerWsMessage, isValidWsMessage, isValidTripEvent, ClientWsMessage } from '@/lib/contracts';
+import {
+  TripEvents,
+  BackendEndpoints,
+  ServerWsMessage,
+  isValidWsMessage,
+  isValidTripEvent,
+  ClientWsMessage
+} from '@/lib/contracts';
 import { Coordinate, CarPackageSlug, Trip, Driver } from '@/lib/types';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 interface useDriverConnectionProps {
   location?: Coordinate;
@@ -22,18 +29,22 @@ export const useDriverStreamConnection = ({
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [driver, setDriver] = useState<Driver | null>(null);
 
+  const sendMessage = useCallback((message: ClientWsMessage) => {
+    if (ws?.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify(message));
+    } else {
+      setError('WebSocket is not connected');
+    }
+  }, [ws]);
+
   useEffect(() => {
-    if (!ws || ws.readyState !== WebSocket.OPEN || !location || !geohash) return;
+    if (!ws || !location || !geohash) return;
 
-    const sendUpdate = () => {
-      ws.send(JSON.stringify({
-        type: TripEvents.DriverLocation,
-        data: { location, geohash }
-      }));
-    };
-
-    sendUpdate();
-  }, [ws, location, geohash]);
+    sendMessage({
+      type: TripEvents.DriverLocationUpdate,
+      data: { location, geohash }
+    })
+  }, [ws, location, geohash, sendMessage]);
 
   useEffect(() => {
     if (!userID) return;
@@ -52,9 +63,6 @@ export const useDriverStreamConnection = ({
       switch (message.type) {
         case TripEvents.DriverTripRequest:
           setRequestedTrip(message.data);
-          break;
-        case TripEvents.DriverRegister:
-          setDriver(message.data);
           break;
       }
 
@@ -82,14 +90,6 @@ export const useDriverStreamConnection = ({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userID]);
-
-  const sendMessage = (message: ClientWsMessage) => {
-    if (ws?.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(message));
-    } else {
-      setError('WebSocket is not connected');
-    }
-  };
 
   const resetTripStatus = () => {
     setTripStatus(null);

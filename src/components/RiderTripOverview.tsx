@@ -3,8 +3,8 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import { DriverCard } from "./DriverCard";
-import { TripEvents, PaymentEventSessionCreatedData } from "@/lib/contracts";
-import { TripPreview, Driver, RouteFare } from "@/lib/types";
+import { TripEvents } from "@/lib/contracts";
+import { TripPreview, Driver, RouteFare, PaymentSession } from "@/lib/types";
 import {
   convertSecondsToMinutes,
   convertMetersToKilometers,
@@ -15,7 +15,7 @@ interface RiderTripOverviewProps {
   trip: TripPreview | null;
   status: TripEvents | null;
   assignedDriver?: Driver | null;
-  paymentSession?: PaymentEventSessionCreatedData | null;
+  paymentSession?: PaymentSession | null;
   onPackageSelect: (carPackage: RouteFare) => void;
   onCancel: () => void;
 }
@@ -28,7 +28,7 @@ export const RiderTripOverview = ({
   onPackageSelect,
   onCancel,
 }: RiderTripOverviewProps) => {
-  if (!trip) {
+  if (!trip || !trip.tripID) {
     return (
       <TripOverviewCard
         title="Start a trip"
@@ -88,7 +88,7 @@ export const RiderTripOverview = ({
     );
   }
 
-  if (status === TripEvents.Completed) {
+  if (status === TripEvents.TripCompleted) {
     return (
       <TripOverviewCard
         title="Trip completed!"
@@ -101,7 +101,7 @@ export const RiderTripOverview = ({
     );
   }
 
-  if (status === TripEvents.Cancelled) {
+  if (status === TripEvents.TripCancelled) {
     return (
       <TripOverviewCard
         title="Trip cancelled!"
@@ -114,7 +114,7 @@ export const RiderTripOverview = ({
     );
   }
 
-  if (status === TripEvents.Created) {
+  if (!assignedDriver) {
     return (
       <TripOverviewCard
         title="Looking for a driver"

@@ -18,13 +18,9 @@ import {
   HTTPTripPreviewRequestPayload,
   BackendEndpoints,
   HTTPTripStartRequestPayload,
-} from "@/lib/contracts";
-import {
-  TripPreview,
-  RouteFare,
-  RequestRideProps,
   HTTPTripStartResponse,
-} from "@/lib/types";
+} from "@/lib/contracts";
+import { TripPreview, RouteFare, RequestRideProps } from "@/lib/types";
 import {
   getGeohashBounds,
   TripDestinationMarker,
@@ -42,7 +38,7 @@ interface RiderMapProps {
 }
 
 export default function RiderMap({ onRouteSelected }: RiderMapProps) {
-  const [trip, setTrip] = useState<TripPreview | null>(null);
+  const [tripPreview, setTripPreview] = useState<TripPreview | null>(null);
   const [selectedCarPackage] = useState<RouteFare | null>(null);
   const [destination, setDestination] = useState<[number, number] | null>(null);
   const mapRef = useRef<L.Map>(null);
@@ -60,7 +56,7 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
   } = useRiderStreamConnection(userID);
 
   const handleMapClick = async (e: L.LeafletMouseEvent) => {
-    if (trip?.tripID) return;
+    if (tripPreview?.tripID) return;
 
     if (!location) return;
 
@@ -80,7 +76,7 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
         (coord) => [coord.longitude, coord.latitude] as [number, number],
       );
 
-      setTrip({
+      setTripPreview({
         tripID: "",
         route: parsedRoute,
         rideFares: data.rideFares,
@@ -136,8 +132,8 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
     });
     const data = (await response.json()) as HTTPTripStartResponse;
 
-    if (response.ok && trip) {
-      setTrip(
+    if (response.ok && tripPreview) {
+      setTripPreview(
         (prev) =>
           ({
             ...prev,
@@ -150,7 +146,7 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
   };
 
   const handleCancelTrip = () => {
-    setTrip(null);
+    setTripPreview(null);
     setDestination(null);
     resetTripStatus();
   };
@@ -235,7 +231,7 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
               </div>
             )}
 
-            {trip && <RoutingControl route={trip.route} />}
+            {tripPreview && <RoutingControl route={tripPreview.route} />}
             <MapClickHandler onClick={handleMapClick} />
           </MapContainer>
         </div>
@@ -245,7 +241,7 @@ export default function RiderMap({ onRouteSelected }: RiderMapProps) {
 
       <div className="flex-[0.4]">
         <RiderTripOverview
-          trip={trip}
+          trip={tripPreview}
           assignedDriver={assignedDriver}
           status={tripStatus}
           paymentSession={paymentSession}
