@@ -48,6 +48,19 @@ export const RiderTripOverview = ({
     );
   }
 
+  if (status === TripEvents.TripCancelled) {
+    return (
+      <TripOverviewCard
+        title="Trip cancelled!"
+        description="The driver has cancelled the trip. Find another driver or try again later."
+      >
+        <Button variant="outline" className="w-full" onClick={onReset}>
+          Go back
+        </Button>
+      </TripOverviewCard>
+    );
+  }
+
   if (status === TripEvents.PaymentSuccess) {
     return (
       <TripOverviewCard

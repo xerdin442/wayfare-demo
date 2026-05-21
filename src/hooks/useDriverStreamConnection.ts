@@ -48,9 +48,11 @@ export const useDriverStreamConnection = (userId: string, location?: Coordinate)
         case TripEvents.TripAborted:
         case TripEvents.TripCancelled:
         case TripEvents.TripCompleted:
-        case TripEvents.CashOptionPreferred:
           setTripStatus(message.type)
           setRequestedTrip(null)
+          break;
+        case TripEvents.CashOptionPreferred:
+          setTripStatus(message.type);
           break;
       }
     };

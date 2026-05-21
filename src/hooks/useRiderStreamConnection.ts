@@ -12,6 +12,14 @@ export function useRiderStreamConnection(userId: string) {
   const [error, setError] = useState<string | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
 
+  const resetTripStatus = () => {
+    setTripStatus(null);
+    setAssignedDriver(null);
+    setDriverLocation(null);
+    setRequestedTrip(null);
+    setTripRatingData(null);
+  }
+
   useEffect(() => {
     if (!userId) return;
 
@@ -35,6 +43,10 @@ export function useRiderStreamConnection(userId: string) {
         case TripEvents.NoDriversFound:
         case TripEvents.TripStarted:
           setTripStatus(message.type);
+          break;
+        case TripEvents.TripCancelled:
+          setTripStatus(message.type);
+          resetTripStatus();
           break;
         case TripEvents.DriverAssigned:
           setAssignedDriver(message.data.driver);
@@ -74,14 +86,6 @@ export function useRiderStreamConnection(userId: string) {
       setError('WebSocket is not connected');
     }
   };
-
-  const resetTripStatus = () => {
-    setTripStatus(null);
-    setAssignedDriver(null);
-    setDriverLocation(null);
-    setRequestedTrip(null);
-    setTripRatingData(null);
-  }
 
   return {
     driverLocation,

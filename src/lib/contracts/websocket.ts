@@ -95,6 +95,7 @@ export interface DriverTripActionRequest {
   | TripEvents.DriverConfirmPickup
   | TripEvents.DriverStartTrip
   | TripEvents.DriverEndTrip
+  | TripEvents.TripCancelled
   | TripEvents.CashPaymentReceived;
   data: {
     trip: Trip;

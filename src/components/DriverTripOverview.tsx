@@ -74,7 +74,7 @@ export const DriverTripOverview = ({
         <Button
           onClick={() => handleTripAction(TripEvents.CashPaymentReceived)}
         >
-          Confirm receipt
+          Confirm
         </Button>
       </TripOverviewCard>
     );
@@ -121,11 +121,17 @@ export const DriverTripOverview = ({
         title="Almost there!"
         description="The rider is waiting for you, proceed to pick them up"
       >
-        <Button
-          onClick={() => handleTripAction(TripEvents.DriverConfirmPickup)}
-        >
-          Confirm pickup
-        </Button>
+        <div className="flex flex-col gap-2">
+          <Button
+            onClick={() => handleTripAction(TripEvents.DriverConfirmPickup)}
+          >
+            Confirm pickup
+          </Button>
+
+          <Button onClick={() => handleTripAction(TripEvents.TripCancelled)}>
+            Cancel trip
+          </Button>
+        </div>
       </TripOverviewCard>
     );
   }

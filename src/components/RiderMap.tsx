@@ -169,8 +169,8 @@ export default function RiderMap({ user }: { user: Rider }) {
       return;
     }
 
-    window.open(result.data.checkoutUrl, "_blank", "noopener,noreferrer");
     setTripStatus(TripEvents.AwaitingWebhookStatus);
+    window.open(result.data.checkoutUrl, "_blank", "noopener,noreferrer");
   };
 
   const handleCashPayment = () => {
