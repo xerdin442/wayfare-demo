@@ -42,6 +42,7 @@ export default function RiderMap({ user }: { user: Rider }) {
   const { location, mapPosition } = useLocationTracker();
   const {
     error,
+    regionBounds,
     tripStatus,
     tripRatingData,
     requestedTrip,
@@ -50,7 +51,7 @@ export default function RiderMap({ user }: { user: Rider }) {
     setTripStatus,
     resetTripStatus,
     sendMessage,
-  } = useRiderStreamConnection(user.id);
+  } = useRiderStreamConnection(user.id, location);
 
   const handleMapClick = async (e: L.LeafletMouseEvent) => {
     if (tripPreview) return;
