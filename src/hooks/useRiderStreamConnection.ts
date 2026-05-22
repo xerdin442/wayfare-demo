@@ -1,14 +1,15 @@
 import { WEBSOCKET_URL } from '@/lib/constants';
 import { TripEvents, ServerWsResponse, isValidWsMessage, ClientWsMessage } from '@/lib/contracts/websocket';
-import { Coordinate, Driver, RatingRequiredData, Trip } from '@/lib/types';
-import { useEffect, useState } from 'react';
+import { Coordinate, Driver, RatingRequiredData, RegionBounds, Trip } from '@/lib/types';
+import { useCallback, useEffect, useState } from 'react';
 
-export function useRiderStreamConnection(userId: string) {
+export function useRiderStreamConnection(userId: string, location?: Coordinate) {
   const [tripStatus, setTripStatus] = useState<TripEvents | null>(null);
   const [requestedTrip, setRequestedTrip] = useState<Trip | null>(null);
   const [tripRatingData, setTripRatingData] = useState<RatingRequiredData | null>(null);
   const [assignedDriver, setAssignedDriver] = useState<Driver | null>(null);
   const [driverLocation, setDriverLocation] = useState<Coordinate | null>(null);
+  const [regionBounds, setRegionBounds] = useState<RegionBounds | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
 
@@ -19,6 +20,20 @@ export function useRiderStreamConnection(userId: string) {
     setRequestedTrip(null);
     setTripRatingData(null);
   }
+
+  const sendMessage = useCallback((message: ClientWsMessage) => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify(message));
+  }, [ws]);
+
+  useEffect(() => {
+    if (!ws || !location) return;
+
+    sendMessage({
+      type: TripEvents.RegionBoundsRequest,
+      data: { pickup: location }
+    })
+  }, [ws, location, sendMessage]);
 
   useEffect(() => {
     if (!userId) return;
@@ -36,6 +51,9 @@ export function useRiderStreamConnection(userId: string) {
       }
 
       switch (message.type) {
+        case TripEvents.RegionBoundsRequest:
+          setRegionBounds(message.data);
+          break;
         case TripEvents.PaymentFailed:
         case TripEvents.PaymentSuccess:
         case TripEvents.PaymentRequired:
@@ -79,15 +97,8 @@ export function useRiderStreamConnection(userId: string) {
     };
   }, [userId]);
 
-  const sendMessage = (message: ClientWsMessage) => {
-    if (ws?.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify(message));
-    } else {
-      setError('WebSocket is not connected');
-    }
-  };
-
   return {
+    regionBounds,
     driverLocation,
     assignedDriver,
     requestedTrip,

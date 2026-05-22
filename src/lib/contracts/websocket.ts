@@ -1,9 +1,10 @@
-import { Coordinate, Driver, RatingRequiredData, Trip } from "../types";
+import { Coordinate, Driver, RatingRequiredData, RegionBounds, Trip } from "../types";
 
 export enum TripEvents {
   NoDriversFound = "trip.event.no_drivers_found",
   DriverAssigned = "trip.event.driver_assigned",
   DriverArrival = "trip.event.driver_arrival",
+  RegionBoundsRequest = "trip.cmd.region_bounds_request",
   TripCancelled = "trip.cmd.cancelled",
   TripCompleted = "trip.cmd.completed",
   TripAborted = "trip.cmd.aborted",
@@ -31,6 +32,7 @@ export type ServerWsResponse =
   | DriverArrivalResponse
   | DriverTripAvailableResponse
   | NoDriversFoundResponse
+  | RegionBoundsResponse
   | TripUpdateResponse
   | PaymentEventResponse
   | TripRatingRequiredResponse;
@@ -38,6 +40,7 @@ export type ServerWsResponse =
 export type ClientWsMessage =
   | DriverTripActionRequest
   | DriverLocationUpdateRequest
+  | RegionBoundsRequest
   | RiderTripActionRequest
   | TripRatingRequest;
 
@@ -65,6 +68,11 @@ interface DriverLocationResponse {
 
 interface DriverArrivalResponse {
   type: TripEvents.DriverArrival
+}
+
+interface RegionBoundsResponse {
+  type: TripEvents.RegionBoundsRequest;
+  data: RegionBounds;
 }
 
 interface TripUpdateResponse {
@@ -109,6 +117,11 @@ interface DriverLocationUpdateRequest {
     coords: Coordinate,
     riderId?: string,
   }
+}
+
+interface RegionBoundsRequest {
+  type: TripEvents.RegionBoundsRequest;
+  data: { pickup: Coordinate }
 }
 
 interface RiderTripActionRequest {

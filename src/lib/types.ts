@@ -9,8 +9,19 @@ export interface Trip {
 }
 
 export interface Coordinate {
-	latitude: number,
-	longitude: number,
+	latitude: number
+	longitude: number
+	address?: string
+}
+
+export interface RegionBounds {
+	regionId: string;
+	minLongitude: number;
+	minLatitude: number;
+	maxLongitude: number;
+	maxLatitude: number;
+	unavailable: boolean;
+	error?: string;
 }
 
 export interface Route {
