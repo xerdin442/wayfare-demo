@@ -15,16 +15,11 @@ import {
   StartTripRequest,
   StartTripResponse,
   sendRequest,
-  InitiatePaymentRequest,
-  InitiatePaymentResponse,
+  InitiateCheckoutRequest,
+  InitiateCheckoutResponse,
 } from "@/lib/contracts/http";
 import { TripEvents } from "@/lib/contracts/websocket";
 import { TripPreview, RideFare, Rider } from "@/lib/types";
-import {
-  TripDestinationMarker,
-  TripPickupMarker,
-  DriverMarker,
-} from "@/lib/utils";
 import { useLocationTracker } from "@/hooks/useLocationTracker";
 import { useRiderStreamConnection } from "@/hooks/useRiderStreamConnection";
 import { DriverCard } from "./DriverCard";
@@ -32,10 +27,12 @@ import LoadingMap from "./LoadingMap";
 import { MapClickHandler } from "./MapClickHandler";
 import { RiderTripOverview } from "./RiderTripOverview";
 import TripRatingModal from "./TripRatingModal";
+import { getMapMarkers } from "@/lib/markers";
 
 export default function RiderMap({ user }: { user: Rider }) {
   const [tripPreview, setTripPreview] = useState<TripPreview | null>(null);
   const [destination, setDestination] = useState<[number, number] | null>(null);
+
   const mapRef = useRef<L.Map>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -52,6 +49,10 @@ export default function RiderMap({ user }: { user: Rider }) {
     resetTripStatus,
     sendMessage,
   } = useRiderStreamConnection(user.id, location);
+
+  const markers = getMapMarkers();
+  if (!markers) return;
+  const { DriverMarker, TripPickupMarker, TripDestinationMarker } = markers;
 
   const handleMapClick = async (e: L.LeafletMouseEvent) => {
     if (tripPreview) return;
@@ -153,7 +154,7 @@ export default function RiderMap({ user }: { user: Rider }) {
   ) => {
     if (!requestedTrip) return;
 
-    const payload: InitiatePaymentRequest = {
+    const payload: InitiateCheckoutRequest = {
       email: user.email,
       tripRating: rating,
       riderComment: comment,
@@ -161,8 +162,8 @@ export default function RiderMap({ user }: { user: Rider }) {
     };
 
     const { result } = await sendRequest<
-      InitiatePaymentRequest,
-      InitiatePaymentResponse
+      InitiateCheckoutRequest,
+      InitiateCheckoutResponse
     >(`/trip/${requestedTrip.id}/pay`, "POST", true, payload);
 
     if (!result.data) {
@@ -198,8 +199,8 @@ export default function RiderMap({ user }: { user: Rider }) {
   return (
     <>
       <div className="relative flex flex-col md:flex-row h-screen">
-        {mapPosition ? (
-          <div className={`${destination ? "flex-[0.7]" : "flex-1"}`}>
+        <div className={`${destination ? "flex-[0.7]" : "flex-1"}`}>
+          {mapPosition ? (
             <MapContainer
               center={mapPosition}
               zoom={13}
@@ -237,10 +238,10 @@ export default function RiderMap({ user }: { user: Rider }) {
 
               <MapClickHandler onClick={handleMapClick} />
             </MapContainer>
-          </div>
-        ) : (
-          <LoadingMap />
-        )}
+          ) : (
+            <LoadingMap />
+          )}
+        </div>
 
         <div className="flex-[0.4]">
           <RiderTripOverview

@@ -16,11 +16,7 @@ import { DriverTripOverview } from "./DriverTripOverview";
 import { useDriverStreamConnection } from "@/hooks/useDriverStreamConnection";
 import { useLocationTracker } from "@/hooks/useLocationTracker";
 import LoadingMap from "./LoadingMap";
-import {
-  TripDestinationMarker,
-  DriverMarker,
-  TripPickupMarker,
-} from "@/lib/utils";
+import { getMapMarkers } from "@/lib/markers";
 
 export const DriverMap = ({ user }: { user: Driver }) => {
   const mapRef = useRef<L.Map>(null);
@@ -74,14 +70,18 @@ export const DriverMap = ({ user }: { user: Driver }) => {
     [requestedTrip],
   );
 
+  const markers = getMapMarkers();
+  if (!markers) return;
+  const { DriverMarker, TripPickupMarker, TripDestinationMarker } = markers;
+
   if (error) {
     return <div>Error: {error}</div>;
   }
 
   return (
     <div className="relative flex flex-col md:flex-row h-screen">
-      {mapPosition ? (
-        <div className="flex-1">
+      <div className="flex-1">
+        {mapPosition ? (
           <MapContainer
             center={mapPosition}
             zoom={13}
@@ -115,10 +115,10 @@ export const DriverMap = ({ user }: { user: Driver }) => {
 
             {parsedRoute && <Polyline positions={parsedRoute} color="blue" />}
           </MapContainer>
-        </div>
-      ) : (
-        <LoadingMap />
-      )}
+        ) : (
+          <LoadingMap />
+        )}
+      </div>
 
       <div className="overflow-y-auto md:w-100 bg-white border-t md:border-t-0 md:border-l">
         <DriverTripOverview

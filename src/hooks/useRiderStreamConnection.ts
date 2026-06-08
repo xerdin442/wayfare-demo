@@ -38,7 +38,7 @@ export function useRiderStreamConnection(userId: string, location?: Coordinate) 
   useEffect(() => {
     if (!userId) return;
 
-    const ws = new WebSocket(`${WEBSOCKET_URL}/ws/riders?user_id=${userId}`);
+    const ws = new WebSocket(`${WEBSOCKET_URL}/riders?user_id=${userId}`);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setWs(ws)
 

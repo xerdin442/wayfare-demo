@@ -29,7 +29,7 @@ export const useDriverStreamConnection = (userId: string, location?: Coordinate)
   useEffect(() => {
     if (!userId) return;
 
-    const ws = new WebSocket(`${WEBSOCKET_URL}/ws/drivers?user_id=${userId}`);
+    const ws = new WebSocket(`${WEBSOCKET_URL}/drivers?user_id=${userId}`);
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setWs(ws);
 
@@ -51,6 +51,8 @@ export const useDriverStreamConnection = (userId: string, location?: Coordinate)
           setTripStatus(message.type)
           setRequestedTrip(null)
           break;
+        case TripEvents.PaymentFailed:
+        case TripEvents.PaymentSuccess:
         case TripEvents.CashOptionPreferred:
           setTripStatus(message.type);
           break;

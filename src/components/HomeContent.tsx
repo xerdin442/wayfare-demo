@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
-import { UserType } from "@/lib/types";
+import { CarPackageSlug, DriverTier, UserType } from "@/lib/types";
 
 // Dynamic imports
 const DriverMap = dynamic(
@@ -54,7 +54,7 @@ export function HomeContent() {
 
   return (
     <>
-      {userType && (
+      {!userType && (
         <div className="flex flex-col items-center justify-center h-screen gap-6 px-4">
           <div className="bg-white p-8 rounded-2xl shadow-lg text-center max-w-md w-full">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">
@@ -82,8 +82,37 @@ export function HomeContent() {
         </div>
       )}
 
-      {userType === "driver" && <DriverMap />}
-      {userType === "rider" && <RiderMap />}
+      {userType === "driver" && (
+        <DriverMap
+          user={{
+            id: "drv_8f2a1c9e4d3b",
+            name: "Sarah Jenkins",
+            email: "sarah.j@ridebebedi.com",
+            phone: "+15550192834",
+            profilePicture:
+              "https://randomuser.me/api/portraits/women/89.jpg",
+            carModel: "Tesla Model Y",
+            carColor: "Blue",
+            carPlate: "7XYZ89",
+            packageSlug: CarPackageSlug.SEDAN,
+            currentRating: 4.72,
+            totalCompletedTrips: 1428,
+            tier: DriverTier.GOLD,
+          }}
+        />
+      )}
+      {userType === "rider" && (
+        <RiderMap
+          user={{
+            id: "rid_9g3b2d0f5e4c",
+            name: "John Doe",
+            email: "john.d@ridebebedi.com",
+            phone: "+15550192835",
+            profilePicture:
+              "https://randomuser.me/api/portraits/men/41.jpg",
+          }}
+        />
+      )}
     </>
   );
 }
