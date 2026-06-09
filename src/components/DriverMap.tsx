@@ -1,25 +1,17 @@
 "use client";
 
-import {
-  MapContainer,
-  Marker,
-  Polyline,
-  Popup,
-  TileLayer,
-} from "react-leaflet";
-import L from "leaflet";
-import { useMemo } from "react";
-import { useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { Car, MapPin, MapPinned } from "lucide-react";
+import { Map, MapMarker, MarkerContent, MapRoute, MapControls } from "./ui/map";
 import { DriverTripActionRequest, TripEvents } from "@/lib/contracts/websocket";
 import { Driver } from "@/lib/types";
 import { DriverTripOverview } from "./DriverTripOverview";
 import { useDriverStreamConnection } from "@/hooks/useDriverStreamConnection";
 import { useLocationTracker } from "@/hooks/useLocationTracker";
 import LoadingMap from "./LoadingMap";
-import { getMapMarkers } from "@/lib/markers";
 
 export const DriverMap = ({ user }: { user: Driver }) => {
-  const mapRef = useRef<L.Map>(null);
+  const mapCenterRef = useRef<[number, number] | null>(null);
   const { location: driverLocation, mapPosition } = useLocationTracker();
 
   const {
@@ -45,7 +37,10 @@ export const DriverMap = ({ user }: { user: Driver }) => {
       },
     });
 
-    if (action === TripEvents.DriverTripDecline) {
+    if (
+      action === TripEvents.DriverTripDecline ||
+      action === TripEvents.TripCancelled
+    ) {
       resetTripStatus();
     } else {
       setTripStatus(action);
@@ -70,9 +65,10 @@ export const DriverMap = ({ user }: { user: Driver }) => {
     [requestedTrip],
   );
 
-  const markers = getMapMarkers();
-  if (!markers) return;
-  const { DriverMarker, TripPickupMarker, TripDestinationMarker } = markers;
+  useEffect(() => {
+    if (!mapPosition) return;
+    mapCenterRef.current = [mapPosition[1], mapPosition[0]];
+  }, [mapPosition]);
 
   if (error) {
     return <div>Error: {error}</div>;
@@ -82,39 +78,51 @@ export const DriverMap = ({ user }: { user: Driver }) => {
     <div className="relative flex flex-col md:flex-row h-screen">
       <div className="flex-1">
         {mapPosition ? (
-          <MapContainer
-            center={mapPosition}
-            zoom={13}
-            style={{ height: "100%", width: "100%" }}
-            ref={mapRef}
-          >
-            <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-              attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors &copy; <a href='https://carto.com/'>CARTO</a>"
-            />
+          <div style={{ height: "100%", width: "100%" }}>
+            <Map
+              className="h-full w-full"
+              center={[mapPosition[1], mapPosition[0]]}
+              zoom={13}
+            >
+              <MapControls position="top-right" showLocate />
 
-            <Marker position={mapPosition} icon={DriverMarker} />
+              {/* Driver */}
+              <MapMarker longitude={mapPosition[1]} latitude={mapPosition[0]}>
+                <MarkerContent>
+                  <Car className="text-blue-600" />
+                </MarkerContent>
+              </MapMarker>
 
-            {pickup && (
-              <Marker
-                position={[pickup.latitude, pickup.longitude]}
-                icon={TripPickupMarker}
-              >
-                <Popup>Pickup</Popup>
-              </Marker>
-            )}
+              {/* Pickup */}
+              {pickup && (
+                <MapMarker
+                  longitude={pickup.longitude}
+                  latitude={pickup.latitude}
+                >
+                  <MarkerContent>
+                    <MapPinned className="text-green-600" />
+                  </MarkerContent>
+                </MapMarker>
+              )}
 
-            {destination && (
-              <Marker
-                position={[destination.latitude, destination.longitude]}
-                icon={TripDestinationMarker}
-              >
-                <Popup>Destination</Popup>
-              </Marker>
-            )}
+              {/* Destination */}
+              {destination && (
+                <MapMarker
+                  longitude={destination.longitude}
+                  latitude={destination.latitude}
+                >
+                  <MarkerContent>
+                    <MapPin className="text-red-600" />
+                  </MarkerContent>
+                </MapMarker>
+              )}
 
-            {parsedRoute && <Polyline positions={parsedRoute} color="blue" />}
-          </MapContainer>
+              {/* Route */}
+              {parsedRoute && parsedRoute.length > 1 && (
+                <MapRoute coordinates={parsedRoute} color="#2563eb" width={4} />
+              )}
+            </Map>
+          </div>
         ) : (
           <LoadingMap />
         )}

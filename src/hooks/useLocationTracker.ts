@@ -1,11 +1,10 @@
 import { Coordinate } from '@/lib/types';
-import { LatLngExpression } from 'leaflet';
 import { useEffect, useRef, useState } from 'react';
 
 export const useLocationTracker = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [location, setLocation] = useState<Coordinate>();
-  const [mapPosition, setMapPosition] = useState<LatLngExpression>();
+  const [mapPosition, setMapPosition] = useState<[number, number] | undefined>();
 
   // Track user location
   useEffect(() => {
@@ -20,10 +19,10 @@ export const useLocationTracker = () => {
             longitude: lng,
           });
 
-          // Update user postion on the map
+          // Update user position on the map
           setMapPosition([lat, lng]);
         },
-        (error) => console.error("User location tracker error:", error),
+        (error) => console.error('User location tracker error:', error),
         { enableHighAccuracy: true },
       );
     }, 3500); // Update user location every 3.5 seconds
@@ -33,5 +32,5 @@ export const useLocationTracker = () => {
     };
   }, []);
 
-  return { location, mapPosition }
+  return { location, mapPosition };
 };

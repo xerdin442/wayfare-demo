@@ -1,11 +1,8 @@
 "use client";
 
-import "leaflet/dist/leaflet.css";
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
-import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
 import { CarPackageSlug, DriverTier, UserType } from "@/lib/types";
 
 // Dynamic imports
@@ -14,19 +11,6 @@ const DriverMap = dynamic(
   { ssr: false },
 );
 const RiderMap = dynamic(() => import("@/components/RiderMap"), { ssr: false });
-
-// Initialize Leaflet with custom icon
-if (typeof window !== "undefined") {
-  import("leaflet").then((L) => {
-    const MarkerIcon = L.default.icon({
-      iconUrl: icon.src,
-      shadowUrl: iconShadow.src,
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-    });
-    L.default.Marker.prototype.options.icon = MarkerIcon;
-  });
-}
 
 export function HomeContent() {
   const [userType, setUserType] = useState<UserType>();

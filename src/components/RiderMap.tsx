@@ -1,14 +1,15 @@
 "use client";
 
-import L from "leaflet";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import {
-  MapContainer,
-  Marker,
-  Polyline,
-  Popup,
-  TileLayer,
-} from "react-leaflet";
+  Map,
+  MapMarker,
+  MarkerContent,
+  MarkerPopup,
+  MapRoute,
+  MapControls,
+} from "./ui/map";
+import { MapPin, Car, MapPinned } from "lucide-react";
 import {
   PreviewTripResponse,
   PreviewTripRequest,
@@ -24,16 +25,15 @@ import { useLocationTracker } from "@/hooks/useLocationTracker";
 import { useRiderStreamConnection } from "@/hooks/useRiderStreamConnection";
 import { DriverCard } from "./DriverCard";
 import LoadingMap from "./LoadingMap";
-import { MapClickHandler } from "./MapClickHandler";
+import MapSearchOverlay from "./MapSearchOverlay";
 import { RiderTripOverview } from "./RiderTripOverview";
 import TripRatingModal from "./TripRatingModal";
-import { getMapMarkers } from "@/lib/markers";
 
 export default function RiderMap({ user }: { user: Rider }) {
   const [tripPreview, setTripPreview] = useState<TripPreview | null>(null);
   const [destination, setDestination] = useState<[number, number] | null>(null);
 
-  const mapRef = useRef<L.Map>(null);
+  const mapCenterRef = useRef<[number, number] | null>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { location, mapPosition } = useLocationTracker();
@@ -50,11 +50,11 @@ export default function RiderMap({ user }: { user: Rider }) {
     sendMessage,
   } = useRiderStreamConnection(user.id, location);
 
-  const markers = getMapMarkers();
-  if (!markers) return;
-  const { DriverMarker, TripPickupMarker, TripDestinationMarker } = markers;
-
-  const handleMapClick = async (e: L.LeafletMouseEvent) => {
+  const handleSelectSuggestion = async (
+    lat: number,
+    lon: number,
+    address: string,
+  ) => {
     if (tripPreview) return;
     if (!location) return;
 
@@ -63,12 +63,11 @@ export default function RiderMap({ user }: { user: Rider }) {
     }
 
     debounceTimeoutRef.current = setTimeout(async () => {
-      setDestination([e.latlng.lat, e.latlng.lng]);
-      if (!destination) return;
+      setDestination([lat, lon]);
 
       const data = await requestRidePreview(
         [location.latitude, location.longitude],
-        destination,
+        [lat, lon],
       );
       if (!data) return;
 
@@ -192,6 +191,11 @@ export default function RiderMap({ user }: { user: Rider }) {
     resetTripStatus();
   };
 
+  useEffect(() => {
+    if (!mapPosition) return;
+    mapCenterRef.current = [mapPosition[1], mapPosition[0]];
+  }, [mapPosition]);
+
   if (error) {
     return <div>Error: {error}</div>;
   }
@@ -201,43 +205,70 @@ export default function RiderMap({ user }: { user: Rider }) {
       <div className="relative flex flex-col md:flex-row h-screen">
         <div className={`${destination ? "flex-[0.7]" : "flex-1"}`}>
           {mapPosition ? (
-            <MapContainer
-              center={mapPosition}
-              zoom={13}
-              style={{ height: "100%", width: "100%" }}
-              ref={mapRef}
-            >
-              <TileLayer
-                url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-                attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors &copy; <a href='https://carto.com/'>CARTO</a>"
-              />
-
-              <Marker position={mapPosition} icon={TripPickupMarker} />
-
-              {assignedDriver && driverLocation && (
-                <Marker
-                  key={assignedDriver.id}
-                  position={[driverLocation.latitude, driverLocation.longitude]}
-                  icon={DriverMarker}
+            <>
+              <div style={{ height: "100%", width: "100%" }}>
+                <Map
+                  className="h-full w-full"
+                  center={[mapPosition[1], mapPosition[0]]}
+                  zoom={13}
                 >
-                  <Popup>
-                    <DriverCard driver={assignedDriver} />
-                  </Popup>
-                </Marker>
-              )}
+                  <MapControls position="top-right" showLocate />
 
-              {destination && (
-                <Marker position={destination} icon={TripDestinationMarker}>
-                  <Popup>Destination</Popup>
-                </Marker>
-              )}
+                  {/* Pickup */}
+                  <MapMarker
+                    longitude={mapPosition[1]}
+                    latitude={mapPosition[0]}
+                  >
+                    <MarkerContent>
+                      <MapPinned className="text-blue-600" />
+                    </MarkerContent>
+                  </MapMarker>
 
-              {tripPreview && (
-                <Polyline positions={tripPreview.route} color="blue" />
-              )}
+                  {/* Driver */}
+                  {assignedDriver && driverLocation && (
+                    <MapMarker
+                      longitude={driverLocation.longitude}
+                      latitude={driverLocation.latitude}
+                    >
+                      <MarkerContent>
+                        <Car className="text-green-600" />
+                      </MarkerContent>
+                      <MarkerPopup>
+                        <DriverCard driver={assignedDriver} />
+                      </MarkerPopup>
+                    </MapMarker>
+                  )}
 
-              <MapClickHandler onClick={handleMapClick} />
-            </MapContainer>
+                  {/* Destination */}
+                  {destination && (
+                    <MapMarker
+                      longitude={destination[1]}
+                      latitude={destination[0]}
+                    >
+                      <MarkerContent>
+                        <MapPin className="text-red-600" />
+                      </MarkerContent>
+                    </MapMarker>
+                  )}
+
+                  {/* Route */}
+                  {tripPreview && tripPreview.route.length > 1 && (
+                    <MapRoute
+                      coordinates={tripPreview.route}
+                      color="#2563eb"
+                      width={4}
+                    />
+                  )}
+                </Map>
+              </div>
+
+              <MapSearchOverlay
+                regionBounds={regionBounds}
+                onSelect={(lat, lon, address) =>
+                  handleSelectSuggestion(lat, lon, address)
+                }
+              />
+            </>
           ) : (
             <LoadingMap />
           )}
