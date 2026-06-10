@@ -5,13 +5,17 @@ import { MapPin, Search } from "lucide-react";
 import { RegionBounds } from "@/lib/types";
 import { LocationDataResponse } from "@/lib/contracts/http";
 
+interface MapSearchOverlayProps {
+  regionBounds: RegionBounds | null;
+  tripPreview: boolean;
+  onSelect: (lat: number, lon: number, address: string) => void;
+}
+
 export default function MapSearchOverlay({
   regionBounds,
+  tripPreview,
   onSelect,
-}: {
-  regionBounds: RegionBounds | null;
-  onSelect: (lat: number, lon: number, address: string) => void;
-}) {
+}: MapSearchOverlayProps) {
   const [q, setQ] = useState("");
   const [results, setResults] = useState<LocationDataResponse[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -27,10 +31,10 @@ export default function MapSearchOverlay({
           ? `${regionBounds.minLongitude},${regionBounds.minLatitude},${regionBounds.maxLongitude},${regionBounds.maxLatitude}`
           : undefined;
 
-        const params = new URLSearchParams({ q, limit: "2" });
+        const params = new URLSearchParams({ q });
         if (viewbox) params.set("viewbox", viewbox);
 
-        const res = await fetch(`/api/locationiq?${params.toString()}`);
+        const res = await fetch(`/api/autocomplete?${params.toString()}`);
         if (!res.ok) return;
         const data = await res.json();
         setResults(Array.isArray(data) ? data.slice(0, 5) : []);
@@ -52,6 +56,7 @@ export default function MapSearchOverlay({
           <input
             className="flex-1 outline-none text-sm"
             placeholder="Search destination"
+            disabled={tripPreview}
             value={q}
             onChange={(e) => setQ(e.target.value)}
           />

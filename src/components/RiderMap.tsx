@@ -18,9 +18,10 @@ import {
   sendRequest,
   InitiateCheckoutRequest,
   InitiateCheckoutResponse,
+  LocationDataResponse,
 } from "@/lib/contracts/http";
 import { TripEvents } from "@/lib/contracts/websocket";
-import { TripPreview, RideFare, Rider } from "@/lib/types";
+import { TripPreview, RideFare, Rider, Coordinate } from "@/lib/types";
 import { useLocationTracker } from "@/hooks/useLocationTracker";
 import { useRiderStreamConnection } from "@/hooks/useRiderStreamConnection";
 import { DriverCard } from "./DriverCard";
@@ -31,7 +32,8 @@ import TripRatingModal from "./TripRatingModal";
 
 export default function RiderMap({ user }: { user: Rider }) {
   const [tripPreview, setTripPreview] = useState<TripPreview | null>(null);
-  const [destination, setDestination] = useState<[number, number] | null>(null);
+  const [destination, setDestination] = useState<Coordinate | null>(null);
+  const [currentAddress, setCurrentAddress] = useState<string>("");
 
   const mapCenterRef = useRef<[number, number] | null>(null);
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -50,6 +52,30 @@ export default function RiderMap({ user }: { user: Rider }) {
     sendMessage,
   } = useRiderStreamConnection(user.id, location);
 
+  useEffect(() => {
+    if (!mapPosition) return;
+    mapCenterRef.current = [mapPosition[1], mapPosition[0]];
+  }, [mapPosition]);
+
+  useEffect(() => {
+    if (tripPreview) return;
+
+    async function getCurrentAddress() {
+      if (!location) return;
+      const params = new URLSearchParams({
+        lat: `${location.latitude}`,
+        lon: `${location.longitude}`,
+      });
+
+      const res = await fetch(`/api/geocode?${params.toString()}`);
+      if (!res.ok) return;
+      const data = (await res.json()) as LocationDataResponse;
+      setCurrentAddress(data.display_name);
+    }
+
+    getCurrentAddress();
+  }, [location, tripPreview]);
+
   const handleSelectSuggestion = async (
     lat: number,
     lon: number,
@@ -63,12 +89,19 @@ export default function RiderMap({ user }: { user: Rider }) {
     }
 
     debounceTimeoutRef.current = setTimeout(async () => {
-      setDestination([lat, lon]);
+      setDestination({
+        latitude: lat,
+        longitude: lon,
+        address: address,
+      });
 
-      const data = await requestRidePreview(
-        [location.latitude, location.longitude],
-        [lat, lon],
-      );
+      const pickup: Coordinate = {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        address: currentAddress,
+      };
+
+      const data = await requestRidePreview(pickup, destination);
       if (!data) return;
 
       const route = data.rideFares[0].route;
@@ -86,18 +119,14 @@ export default function RiderMap({ user }: { user: Rider }) {
   };
 
   const requestRidePreview = async (
-    pickup: [number, number],
-    destination: [number, number],
+    pickup: Coordinate,
+    destination: Coordinate | null,
   ): Promise<PreviewTripResponse | null> => {
+    if (!destination) return null;
+
     const payload: PreviewTripRequest = {
-      pickup: {
-        latitude: pickup[0],
-        longitude: pickup[1],
-      },
-      destination: {
-        latitude: destination[0],
-        longitude: destination[1],
-      },
+      pickup,
+      destination,
     };
 
     const { result } = await sendRequest<
@@ -191,13 +220,11 @@ export default function RiderMap({ user }: { user: Rider }) {
     resetTripStatus();
   };
 
-  useEffect(() => {
-    if (!mapPosition) return;
-    mapCenterRef.current = [mapPosition[1], mapPosition[0]];
-  }, [mapPosition]);
-
   if (error) {
     return <div>Error: {error}</div>;
+  }
+
+  if (regionBounds && regionBounds.unavailable) {
   }
 
   return (
@@ -242,8 +269,8 @@ export default function RiderMap({ user }: { user: Rider }) {
                   {/* Destination */}
                   {destination && (
                     <MapMarker
-                      longitude={destination[1]}
-                      latitude={destination[0]}
+                      longitude={destination.longitude}
+                      latitude={destination.latitude}
                     >
                       <MarkerContent>
                         <MapPin className="text-red-600" />
@@ -264,6 +291,7 @@ export default function RiderMap({ user }: { user: Rider }) {
 
               <MapSearchOverlay
                 regionBounds={regionBounds}
+                tripPreview={!!tripPreview}
                 onSelect={(lat, lon, address) =>
                   handleSelectSuggestion(lat, lon, address)
                 }
