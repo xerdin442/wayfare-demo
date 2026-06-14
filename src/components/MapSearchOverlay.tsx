@@ -21,18 +21,15 @@ export default function MapSearchOverlay({
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!q) return;
-
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
     timeoutRef.current = setTimeout(async () => {
-      try {
-        const viewbox = regionBounds
-          ? `${regionBounds.minLongitude},${regionBounds.minLatitude},${regionBounds.maxLongitude},${regionBounds.maxLatitude}`
-          : undefined;
+      setResults([]);
+      if (!q || !regionBounds) return;
 
-        const params = new URLSearchParams({ q });
-        if (viewbox) params.set("viewbox", viewbox);
+      try {
+        const viewbox = `${regionBounds.minLongitude},${regionBounds.minLatitude},${regionBounds.maxLongitude},${regionBounds.maxLatitude}`;
+        const params = new URLSearchParams({ q, viewbox });
 
         const res = await fetch(`/api/autocomplete?${params.toString()}`);
         if (!res.ok) return;
@@ -49,8 +46,8 @@ export default function MapSearchOverlay({
   }, [q, regionBounds]);
 
   return (
-    <div className="absolute z-50 top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:right-4 md:left-auto md:translate-x-0 md:w-72">
-      <div className="bg-white rounded shadow p-2">
+    <div className="absolute z-50 top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:right-4 md:left-auto md:translate-x-0 md:w-80">
+      <div className="bg-white rounded-md shadow p-3">
         <div className="flex items-center gap-2">
           <Search className="h-4 w-4 text-gray-500" />
           <input
@@ -78,7 +75,7 @@ export default function MapSearchOverlay({
                   );
                 }}
               >
-                <MapPin className="h-4 w-4 text-gray-700" />
+                <MapPin className="h-8 w-8 text-gray-700" />
                 <span className="truncate">{r.display_name}</span>
               </li>
             ))}

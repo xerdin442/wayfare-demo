@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ride App Demo",
+  title: "Wayfare",
 };
 
 export default function RootLayout({

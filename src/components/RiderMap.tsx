@@ -9,7 +9,7 @@ import {
   MapRoute,
   MapControls,
 } from "./ui/map";
-import { MapPin, Car, MapPinned } from "lucide-react";
+import { MapPin, MapPinned, CarFront } from "lucide-react";
 import {
   PreviewTripResponse,
   PreviewTripRequest,
@@ -57,14 +57,16 @@ export default function RiderMap({ user }: { user: Rider }) {
     mapCenterRef.current = [mapPosition[1], mapPosition[0]];
   }, [mapPosition]);
 
+  const lat = location?.latitude;
+  const lon = location?.longitude;
   useEffect(() => {
     if (tripPreview) return;
 
     async function getCurrentAddress() {
-      if (!location) return;
+      if (!lat || !lon) return;
       const params = new URLSearchParams({
-        lat: `${location.latitude}`,
-        lon: `${location.longitude}`,
+        lat: `${lat}`,
+        lon: `${lon}`,
       });
 
       const res = await fetch(`/api/geocode?${params.toString()}`);
@@ -74,7 +76,7 @@ export default function RiderMap({ user }: { user: Rider }) {
     }
 
     getCurrentAddress();
-  }, [location, tripPreview]);
+  }, [lat, lon, tripPreview]);
 
   const handleSelectSuggestion = async (
     lat: number,
@@ -230,16 +232,16 @@ export default function RiderMap({ user }: { user: Rider }) {
   return (
     <>
       <div className="relative flex flex-col md:flex-row h-screen">
-        <div className={`${destination ? "flex-[0.7]" : "flex-1"}`}>
+        <div className={`relative ${destination ? "flex-[0.7]" : "flex-1"}`}>
           {mapPosition ? (
             <>
               <div style={{ height: "100%", width: "100%" }}>
                 <Map
                   className="h-full w-full"
                   center={[mapPosition[1], mapPosition[0]]}
-                  zoom={13}
+                  zoom={30}
                 >
-                  <MapControls position="top-right" showLocate />
+                  <MapControls position="bottom-right" showLocate />
 
                   {/* Pickup */}
                   <MapMarker
@@ -258,7 +260,7 @@ export default function RiderMap({ user }: { user: Rider }) {
                       latitude={driverLocation.latitude}
                     >
                       <MarkerContent>
-                        <Car className="text-green-600" />
+                        <CarFront className="text-green-600" />
                       </MarkerContent>
                       <MarkerPopup>
                         <DriverCard driver={assignedDriver} />

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef } from "react";
-import { Car, MapPin, MapPinned } from "lucide-react";
+import { CarFront, MapPin, MapPinned } from "lucide-react";
 import { Map, MapMarker, MarkerContent, MapRoute, MapControls } from "./ui/map";
 import { DriverTripActionRequest, TripEvents } from "@/lib/contracts/websocket";
 import { Driver } from "@/lib/types";
@@ -82,14 +82,14 @@ export const DriverMap = ({ user }: { user: Driver }) => {
             <Map
               className="h-full w-full"
               center={[mapPosition[1], mapPosition[0]]}
-              zoom={13}
+              zoom={30}
             >
-              <MapControls position="top-right" showLocate />
+              <MapControls position="bottom-right" showLocate />
 
               {/* Driver */}
               <MapMarker longitude={mapPosition[1]} latitude={mapPosition[0]}>
                 <MarkerContent>
-                  <Car className="text-blue-600" />
+                  <CarFront className="text-blue-600" />
                 </MarkerContent>
               </MapMarker>
 
