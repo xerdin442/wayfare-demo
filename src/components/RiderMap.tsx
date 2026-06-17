@@ -29,6 +29,7 @@ import LoadingMap from "./LoadingMap";
 import MapSearchOverlay from "./MapSearchOverlay";
 import { RiderTripOverview } from "./RiderTripOverview";
 import TripRatingModal from "./TripRatingModal";
+import UnsupportedRegion from "./UnsupportedRegion";
 
 export default function RiderMap({ user }: { user: Rider }) {
   const [tripPreview, setTripPreview] = useState<TripPreview | null>(null);
@@ -226,9 +227,6 @@ export default function RiderMap({ user }: { user: Rider }) {
     return <div>Error: {error}</div>;
   }
 
-  if (regionBounds && regionBounds.unavailable) {
-  }
-
   return (
     <>
       <div className="relative flex flex-col md:flex-row h-screen">
@@ -324,6 +322,10 @@ export default function RiderMap({ user }: { user: Rider }) {
           confirmSubmit={sendMessage}
           onClose={resetTripStatus}
         />
+      )}
+
+      {regionBounds && regionBounds.unavailable && (
+        <UnsupportedRegion message={regionBounds.error} />
       )}
     </>
   );
