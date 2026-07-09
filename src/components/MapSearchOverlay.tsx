@@ -28,7 +28,7 @@ export default function MapSearchOverlay({
       if (!q || !regionBounds) return;
 
       try {
-        const viewbox = `${regionBounds.minLongitude},${regionBounds.minLatitude},${regionBounds.maxLongitude},${regionBounds.maxLatitude}`;
+        const viewbox = `${regionBounds.min_longitude},${regionBounds.min_latitude},${regionBounds.max_longitude},${regionBounds.max_latitude}`;
         const params = new URLSearchParams({ q, viewbox });
 
         const res = await fetch(`/api/autocomplete?${params.toString()}`);

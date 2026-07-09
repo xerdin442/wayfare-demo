@@ -15,11 +15,11 @@ export interface Coordinate {
 }
 
 export interface RegionBounds {
-	regionId: string;
-	minLongitude: number;
-	minLatitude: number;
-	maxLongitude: number;
-	maxLatitude: number;
+	region_id: string;
+	min_longitude: number;
+	min_latitude: number;
+	max_longitude: number;
+	max_latitude: number;
 	unavailable: boolean;
 	error?: string;
 }
