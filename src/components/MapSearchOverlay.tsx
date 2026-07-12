@@ -19,31 +19,43 @@ export default function MapSearchOverlay({
   const [q, setQ] = useState("");
   const [results, setResults] = useState<LocationDataResponse[]>([]);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const regionBoundsRef = useRef(regionBounds);
+
+  useEffect(() => {
+    regionBoundsRef.current = regionBounds;
+  }, [regionBounds]);
 
   useEffect(() => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (abortRef.current) abortRef.current.abort();
 
     timeoutRef.current = setTimeout(async () => {
-      setResults([]);
-      if (!q || !regionBounds) return;
+      const bounds = regionBoundsRef.current;
+      if (!bounds) return;
+
+      const controller = new AbortController();
+      abortRef.current = controller;
 
       try {
-        const viewbox = `${regionBounds.min_longitude},${regionBounds.min_latitude},${regionBounds.max_longitude},${regionBounds.max_latitude}`;
+        const viewbox = `${bounds.min_longitude},${bounds.min_latitude},${bounds.max_longitude},${bounds.max_latitude}`;
         const params = new URLSearchParams({ q, viewbox });
 
-        const res = await fetch(`/api/autocomplete?${params.toString()}`);
+        const res = await fetch(`/api/autocomplete?${params.toString()}`, {
+          signal: controller.signal,
+        });
         if (!res.ok) return;
         const data = await res.json();
         setResults(Array.isArray(data) ? data.slice(0, 5) : []);
       } catch (e) {
-        console.error(e);
+        if ((e as Error).name !== "AbortError") console.error(e);
       }
     }, 350);
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [q, regionBounds]);
+  }, [q]);
 
   return (
     <div className="absolute z-50 top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:right-4 md:left-auto md:translate-x-0 md:w-80">
@@ -55,7 +67,14 @@ export default function MapSearchOverlay({
             placeholder="Search destination"
             disabled={tripPreview}
             value={q}
-            onChange={(e) => setQ(e.target.value)}
+            onChange={(e) => {
+              const value = e.target.value;
+              setQ(value);
+
+              if (!value) {
+                setResults([]);
+              }
+            }}
           />
         </div>
 

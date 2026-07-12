@@ -82,7 +82,7 @@ export const DriverMap = ({ user }: { user: Driver }) => {
             <Map
               className="h-full w-full"
               center={[mapPosition[1], mapPosition[0]]}
-              zoom={20}
+              zoom={15}
             >
               <MapControls position="bottom-right" showLocate />
 

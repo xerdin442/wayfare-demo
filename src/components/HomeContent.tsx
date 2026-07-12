@@ -3,9 +3,9 @@
 import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
-import { CarPackageSlug, DriverTier, UserType } from "@/lib/types";
+import { Login } from "@/components/Login";
+import { Driver, Rider, UserType } from "@/lib/types";
 
-// Dynamic imports
 const DriverMap = dynamic(
   () => import("@/components/DriverMap").then((mod) => mod.DriverMap),
   { ssr: false },
@@ -14,6 +14,7 @@ const RiderMap = dynamic(() => import("@/components/RiderMap"), { ssr: false });
 
 export function HomeContent() {
   const [userType, setUserType] = useState<UserType>();
+  const [profile, setProfile] = useState<Driver | Rider>();
 
   const handleUserTypeSelection = (type: UserType) => {
     // Check if browser supports geolocation
@@ -66,37 +67,19 @@ export function HomeContent() {
         </div>
       )}
 
-      {userType === "driver" && (
-        <DriverMap
-          user={{
-            id: "drv_8f2a1c9e4d3b",
-            name: "Sarah Jenkins",
-            email: "sarah.j@ridebebedi.com",
-            phone: "+15550192834",
-            profilePicture:
-              "https://randomuser.me/api/portraits/women/89.jpg",
-            carModel: "Tesla Model Y",
-            carColor: "Blue",
-            carPlate: "7XYZ89",
-            packageSlug: CarPackageSlug.SEDAN,
-            currentRating: 4.72,
-            totalCompletedTrips: 1428,
-            tier: DriverTier.GOLD,
-          }}
+      {userType && !profile && (
+        <Login
+          userType={userType}
+          onSuccess={(p) => setProfile(p)}
+          onBack={() => setUserType(undefined)}
         />
       )}
-      {userType === "rider" && (
-        <RiderMap
-          user={{
-            id: "rid_9g3b2d0f5e4c",
-            name: "John Doe",
-            email: "john.d@ridebebedi.com",
-            phone: "+15550192835",
-            profilePicture:
-              "https://randomuser.me/api/portraits/men/41.jpg",
-          }}
-        />
+
+      {userType === "driver" && profile && (
+        <DriverMap user={profile as Driver} />
       )}
+
+      {userType === "rider" && profile && <RiderMap user={profile as Rider} />}
     </>
   );
 }

@@ -52,7 +52,6 @@ export function useRiderStreamConnection(userId: string, location?: Coordinate) 
 
       switch (message.type) {
         case TripEvents.RegionBoundsRequest:
-          console.log(message.data)
           setRegionBounds(message.data);
           break;
         case TripEvents.PaymentFailed:
