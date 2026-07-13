@@ -63,7 +63,7 @@ export function CarPackageSelect({
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold">{price}</p>
+                  <p className="font-semibold text-xl">{price}</p>
                 </div>
               </div>
             );

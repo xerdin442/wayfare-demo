@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import { DriverCard } from "./DriverCard";
 import { TripEvents } from "@/lib/contracts/websocket";
-import { TripPreview, Driver, RideFare } from "@/lib/types";
+import { TripOverview, Driver, RideFare } from "@/lib/types";
 import {
   convertSecondsToMinutes,
   convertMetersToKilometers,
@@ -13,7 +13,7 @@ import { useState } from "react";
 import CheckoutDetails from "./CheckoutDetails";
 
 interface RiderTripOverviewProps {
-  trip: TripPreview | null;
+  trip: TripOverview | null;
   status: TripEvents | null;
   assignedDriver?: Driver | null;
   handleStartTrip: (fare: RideFare) => void;

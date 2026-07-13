@@ -21,7 +21,7 @@ import {
   LocationDataResponse,
 } from "@/lib/contracts/http";
 import { TripEvents } from "@/lib/contracts/websocket";
-import { TripPreview, RideFare, Rider, Coordinate } from "@/lib/types";
+import { TripOverview, RideFare, Rider, Coordinate } from "@/lib/types";
 import { useLocationTracker } from "@/hooks/useLocationTracker";
 import { useRiderStreamConnection } from "@/hooks/useRiderStreamConnection";
 import { DriverCard } from "./DriverCard";
@@ -32,7 +32,7 @@ import TripRatingModal from "./TripRatingModal";
 import UnsupportedRegion from "./UnsupportedRegion";
 
 export default function RiderMap({ user }: { user: Rider }) {
-  const [tripPreview, setTripPreview] = useState<TripPreview | null>(null);
+  const [tripOverview, setTripOverview] = useState<TripOverview | null>(null);
   const [destination, setDestination] = useState<Coordinate | null>(null);
   const [currentAddress, setCurrentAddress] = useState<string>("");
 
@@ -61,7 +61,7 @@ export default function RiderMap({ user }: { user: Rider }) {
   const lat = location?.latitude;
   const lon = location?.longitude;
   useEffect(() => {
-    if (tripPreview) return;
+    if (tripOverview) return;
 
     async function getCurrentAddress() {
       if (!lat || !lon) return;
@@ -77,14 +77,14 @@ export default function RiderMap({ user }: { user: Rider }) {
     }
 
     getCurrentAddress();
-  }, [lat, lon, tripPreview]);
+  }, [lat, lon, tripOverview]);
 
   const handleSelectSuggestion = async (
     lat: number,
     lon: number,
     address: string,
   ) => {
-    if (tripPreview) return;
+    if (tripOverview) return;
     if (!location) return;
 
     if (debounceTimeoutRef.current) {
@@ -105,7 +105,7 @@ export default function RiderMap({ user }: { user: Rider }) {
         address: currentAddress,
       };
 
-      const data = await requestRidePreview(pickup, newDestination);
+      const data = await requestTripPreview(pickup, newDestination);
       if (!data) return;
 
       const route = data.rideFares[0].route;
@@ -113,7 +113,7 @@ export default function RiderMap({ user }: { user: Rider }) {
         (coord) => [coord.longitude, coord.latitude] as [number, number],
       );
 
-      setTripPreview({
+      setTripOverview({
         route: parsedRoute,
         rideFares: data.rideFares,
         distance: route.distance,
@@ -122,7 +122,7 @@ export default function RiderMap({ user }: { user: Rider }) {
     }, 500);
   };
 
-  const requestRidePreview = async (
+  const requestTripPreview = async (
     pickup: Coordinate,
     destination: Coordinate,
   ): Promise<PreviewTripResponse | null> => {
@@ -177,7 +177,7 @@ export default function RiderMap({ user }: { user: Rider }) {
       data: { trip: requestedTrip },
     });
 
-    resetTripPreview();
+    resetTripOverview();
   };
 
   const handleCheckout = async (
@@ -219,8 +219,8 @@ export default function RiderMap({ user }: { user: Rider }) {
     setTripStatus(TripEvents.CashOptionPreferred);
   };
 
-  const resetTripPreview = () => {
-    setTripPreview(null);
+  const resetTripOverview = () => {
+    setTripOverview(null);
     setDestination(null);
     resetTripStatus();
   };
@@ -239,7 +239,7 @@ export default function RiderMap({ user }: { user: Rider }) {
                 <Map
                   className="h-full w-full"
                   center={[mapPosition[1], mapPosition[0]]}
-                  zoom={16}
+                  zoom={15}
                 >
                   <MapControls position="bottom-right" showLocate />
 
@@ -281,9 +281,9 @@ export default function RiderMap({ user }: { user: Rider }) {
                   )}
 
                   {/* Route */}
-                  {tripPreview && tripPreview.route.length > 1 && (
+                  {tripOverview && tripOverview.route.length > 1 && (
                     <MapRoute
-                      coordinates={tripPreview.route}
+                      coordinates={tripOverview.route}
                       color="#2563eb"
                       width={4}
                     />
@@ -293,7 +293,7 @@ export default function RiderMap({ user }: { user: Rider }) {
 
               <MapSearchOverlay
                 regionBounds={regionBounds}
-                tripPreview={!!tripPreview}
+                tripOverview={!!tripOverview}
                 onSelect={(lat, lon, address) =>
                   handleSelectSuggestion(lat, lon, address)
                 }
@@ -306,14 +306,14 @@ export default function RiderMap({ user }: { user: Rider }) {
 
         <div className="flex-[0.4]">
           <RiderTripOverview
-            trip={tripPreview}
+            trip={tripOverview}
             assignedDriver={assignedDriver}
             status={tripStatus}
             handleStartTrip={handleStartTrip}
             handleCheckout={handleCheckout}
             handleCashPayment={handleCashPayment}
             handleCancelTrip={handleCancelTrip}
-            onReset={resetTripPreview}
+            onReset={resetTripOverview}
           />
         </div>
       </div>

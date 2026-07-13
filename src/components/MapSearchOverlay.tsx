@@ -7,13 +7,13 @@ import { LocationDataResponse } from "@/lib/contracts/http";
 
 interface MapSearchOverlayProps {
   regionBounds: RegionBounds | null;
-  tripPreview: boolean;
+  tripOverview: boolean;
   onSelect: (lat: number, lon: number, address: string) => void;
 }
 
 export default function MapSearchOverlay({
   regionBounds,
-  tripPreview,
+  tripOverview,
   onSelect,
 }: MapSearchOverlayProps) {
   const [q, setQ] = useState("");
@@ -57,7 +57,7 @@ export default function MapSearchOverlay({
     };
   }, [q]);
 
-  if (tripPreview) return null;
+  if (tripOverview) return null;
 
   return (
     <div className="absolute z-50 top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:right-4 md:left-auto md:translate-x-0 md:w-80">

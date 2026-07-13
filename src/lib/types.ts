@@ -51,7 +51,7 @@ export interface RideFare {
 	route: Route,
 }
 
-export interface TripPreview {
+export interface TripOverview {
 	route: [number, number][],
 	rideFares: RideFare[],
 	duration: number,
