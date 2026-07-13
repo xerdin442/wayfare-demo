@@ -9,7 +9,6 @@ export class SessionExpiredError extends Error {
 }
 
 async function refreshAccessToken(userType: UserType): Promise<string> {
-  console.log('Refresh request...')
   const res = await fetch(`${API_URL}/auth/refresh`, {
     method: "POST",
     headers: { "X-User-Role": userType },

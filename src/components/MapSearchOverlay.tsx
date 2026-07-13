@@ -32,7 +32,7 @@ export default function MapSearchOverlay({
 
     timeoutRef.current = setTimeout(async () => {
       const bounds = regionBoundsRef.current;
-      if (!bounds) return;
+      if (!q || !bounds) return;
 
       const controller = new AbortController();
       abortRef.current = controller;
@@ -57,6 +57,8 @@ export default function MapSearchOverlay({
     };
   }, [q]);
 
+  if (tripPreview) return null;
+
   return (
     <div className="absolute z-50 top-4 left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] md:right-4 md:left-auto md:translate-x-0 md:w-80">
       <div className="bg-white rounded-md shadow p-3">
@@ -65,7 +67,6 @@ export default function MapSearchOverlay({
           <input
             className="flex-1 outline-none text-sm"
             placeholder="Search destination"
-            disabled={tripPreview}
             value={q}
             onChange={(e) => {
               const value = e.target.value;

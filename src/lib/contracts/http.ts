@@ -50,6 +50,7 @@ export interface StartTripRequest {
 }
 
 export interface PreviewTripRequest {
+  regionId: string;
   pickup: Coordinate;
   destination: Coordinate;
 }

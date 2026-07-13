@@ -214,7 +214,10 @@ export const RiderTripOverview = ({
           <Button
             variant="destructive"
             className="w-full"
-            onClick={handleCancelTrip}
+            onClick={() => {
+              handleCancelTrip();
+              setAmount(0);
+            }}
           >
             Cancel
           </Button>

@@ -92,11 +92,12 @@ export default function RiderMap({ user }: { user: Rider }) {
     }
 
     debounceTimeoutRef.current = setTimeout(async () => {
-      setDestination({
+      const newDestination: Coordinate = {
         latitude: lat,
         longitude: lon,
         address: address,
-      });
+      };
+      setDestination(newDestination);
 
       const pickup: Coordinate = {
         latitude: location.latitude,
@@ -104,7 +105,7 @@ export default function RiderMap({ user }: { user: Rider }) {
         address: currentAddress,
       };
 
-      const data = await requestRidePreview(pickup, destination);
+      const data = await requestRidePreview(pickup, newDestination);
       if (!data) return;
 
       const route = data.rideFares[0].route;
@@ -123,11 +124,12 @@ export default function RiderMap({ user }: { user: Rider }) {
 
   const requestRidePreview = async (
     pickup: Coordinate,
-    destination: Coordinate | null,
+    destination: Coordinate,
   ): Promise<PreviewTripResponse | null> => {
-    if (!destination) return null;
+    if (!regionBounds) return null;
 
     const payload: PreviewTripRequest = {
+      regionId: regionBounds.region_id,
       pickup,
       destination,
     };
@@ -230,14 +232,14 @@ export default function RiderMap({ user }: { user: Rider }) {
   return (
     <>
       <div className="relative flex flex-col md:flex-row h-screen">
-        <div className={`relative ${destination ? "flex-[0.7]" : "flex-1"}`}>
+        <div className={`relative ${destination ? "flex-[0.8]" : "flex-1"}`}>
           {mapPosition ? (
             <>
               <div style={{ height: "100%", width: "100%" }}>
                 <Map
                   className="h-full w-full"
                   center={[mapPosition[1], mapPosition[0]]}
-                  zoom={15}
+                  zoom={16}
                 >
                   <MapControls position="bottom-right" showLocate />
 

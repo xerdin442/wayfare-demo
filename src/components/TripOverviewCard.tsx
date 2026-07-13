@@ -19,7 +19,7 @@ export const TripOverviewCard = ({
   children,
 }: TripOverviewCardProps) => {
   return (
-    <Card className="w-full md:max-w-125 z-9999 flex-[0.3]">
+    <Card className="w-full md:max-w-125 z-9999 flex-[0.3] rounded-none md:h-screen">
       <CardHeader>
         <CardTitle>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>

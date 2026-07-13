@@ -26,7 +26,6 @@ export function Login({ userType, onSuccess, onBack }: LoginProps) {
     setIsSubmitting(true);
 
     try {
-      console.log("Login request...");
       const loginRes = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: {
@@ -48,7 +47,6 @@ export function Login({ userType, onSuccess, onBack }: LoginProps) {
       const token: string = loginBody.data.token;
       localStorage.setItem(AUTH_TOKEN, token);
 
-      console.log("Profile request...");
       const profileRes = await fetchWithAuth(
         `${API_URL}/user/profile`,
         userType,
