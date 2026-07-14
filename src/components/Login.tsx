@@ -9,11 +9,17 @@ import { fetchWithAuth } from "@/lib/contracts/http";
 
 interface LoginProps {
   userType: UserType;
+  sessionExpired?: boolean;
   onSuccess: (profile: Driver | Rider) => void;
   onBack?: () => void;
 }
 
-export function Login({ userType, onSuccess, onBack }: LoginProps) {
+export function Login({
+  userType,
+  sessionExpired,
+  onSuccess,
+  onBack,
+}: LoginProps) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -80,6 +86,12 @@ export function Login({ userType, onSuccess, onBack }: LoginProps) {
           {userType === "driver" ? "Driver Login" : "Rider Login"}
         </h2>
         <p className="text-gray-600 mb-6">Enter your credentials to continue</p>
+
+        {sessionExpired && (
+          <div className="mb-4 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+            Your session has expired. Please log in again.
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4 text-left">
           <div>

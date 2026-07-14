@@ -5,6 +5,7 @@ import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { Login } from "@/components/Login";
 import { Driver, Rider, UserType } from "@/lib/types";
+import { useSessionStore } from "@/lib/store/session";
 
 const DriverMap = dynamic(
   () => import("@/components/DriverMap").then((mod) => mod.DriverMap),
@@ -15,6 +16,9 @@ const RiderMap = dynamic(() => import("@/components/RiderMap"), { ssr: false });
 export function HomeContent() {
   const [userType, setUserType] = useState<UserType>();
   const [profile, setProfile] = useState<Driver | Rider>();
+
+  const { sessionExpired, clearExpired } = useSessionStore();
+  const effectiveProfile = sessionExpired ? undefined : profile;
 
   const handleUserTypeSelection = (type: UserType) => {
     // Check if browser supports geolocation
@@ -35,6 +39,11 @@ export function HomeContent() {
       },
       { enableHighAccuracy: true },
     );
+  };
+
+  const handleLoginSuccess = (p: Driver | Rider) => {
+    clearExpired();
+    setProfile(p);
   };
 
   return (
@@ -67,19 +76,25 @@ export function HomeContent() {
         </div>
       )}
 
-      {userType && !profile && (
+      {userType && !effectiveProfile && (
         <Login
           userType={userType}
-          onSuccess={(p) => setProfile(p)}
-          onBack={() => setUserType(undefined)}
+          sessionExpired={sessionExpired}
+          onSuccess={handleLoginSuccess}
+          onBack={() => {
+            clearExpired();
+            setUserType(undefined);
+          }}
         />
       )}
 
-      {userType === "driver" && profile && (
-        <DriverMap user={profile as Driver} />
+      {userType === "driver" && effectiveProfile && (
+        <DriverMap user={effectiveProfile as Driver} />
       )}
 
-      {userType === "rider" && profile && <RiderMap user={profile as Rider} />}
+      {userType === "rider" && effectiveProfile && (
+        <RiderMap user={effectiveProfile as Rider} />
+      )}
     </>
   );
 }

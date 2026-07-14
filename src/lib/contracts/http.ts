@@ -1,5 +1,6 @@
 import { Coordinate, RideFare, UserType } from "../types";
 import { API_URL, AUTH_TOKEN } from "../constants";
+import { useSessionStore } from "../store/session";
 
 export class SessionExpiredError extends Error {
   constructor() {
@@ -58,17 +59,25 @@ export async function sendRequest<T, K>(
   userType: UserType,
   payload?: T,
 ) {
-  const response = await fetchWithAuth(`${API_URL}${url}`, userType, {
-    method: payload ? "POST" : "GET",
-    body: payload ? JSON.stringify(payload) : null,
-  });
-  const result = (await response.json()) as {
-    data?: K;
-    message?: string;
-    error?: string;
-  };
+  try {
+    const response = await fetchWithAuth(`${API_URL}${url}`, userType, {
+      method: payload ? "POST" : "GET",
+      body: payload ? JSON.stringify(payload) : null,
+    });
+    const result = (await response.json()) as {
+      data?: K;
+      message?: string;
+      error?: string;
+    };
 
-  return { result, status: response.status };
+    return { result, status: response.status };
+  } catch (error) {
+    if (error instanceof SessionExpiredError) {
+      useSessionStore.getState().markExpired();
+      return { result: {}, status: 401 };
+    }
+    throw error;
+  }
 }
 
 export interface PreviewTripResponse {
