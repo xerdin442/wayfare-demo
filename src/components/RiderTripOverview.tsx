@@ -42,8 +42,8 @@ export const RiderTripOverview = ({
   if (!trip) {
     return (
       <TripOverviewCard
-        title="Start a trip"
-        description="Click on the map to set a destination"
+        title="Where to?"
+        description="Search or pick a recent location to get started"
       />
     );
   }

@@ -137,7 +137,7 @@ export default function RiderMap({ user }: { user: Rider }) {
     const { result } = await sendRequest<
       PreviewTripRequest,
       PreviewTripResponse
-    >("/trip/preview", "POST", true, payload);
+    >("/trip/preview", "rider", payload);
 
     if (!result.data) {
       // handle error display
@@ -156,8 +156,7 @@ export default function RiderMap({ user }: { user: Rider }) {
 
     const { result } = await sendRequest<StartTripRequest, StartTripResponse>(
       "/trip/start",
-      "POST",
-      true,
+      "rider",
       payload,
     );
 
@@ -197,7 +196,7 @@ export default function RiderMap({ user }: { user: Rider }) {
     const { result } = await sendRequest<
       InitiateCheckoutRequest,
       InitiateCheckoutResponse
-    >(`/trip/${requestedTrip.id}/pay`, "POST", true, payload);
+    >(`/trip/${requestedTrip.id}/pay`, "rider", payload);
 
     if (!result.data) {
       // handle error display

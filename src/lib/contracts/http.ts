@@ -1,25 +1,71 @@
-import { Coordinate, RideFare, Driver, Rider } from "../types";
+import { Coordinate, RideFare, UserType } from "../types";
 import { API_URL, AUTH_TOKEN } from "../constants";
+
+export class SessionExpiredError extends Error {
+  constructor() {
+    super("Session expired. Please log in again.");
+    this.name = "SessionExpiredError";
+  }
+}
+
+async function refreshAccessToken(userType: UserType): Promise<string> {
+  const res = await fetch(`${API_URL}/auth/refresh`, {
+    method: "POST",
+    headers: { "X-User-Role": userType },
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    localStorage.removeItem(AUTH_TOKEN);
+    throw new SessionExpiredError();
+  }
+
+  const body = await res.json();
+  const token: string = body.data.token;
+  localStorage.setItem(AUTH_TOKEN, token);
+  return token;
+}
+
+export async function fetchWithAuth(
+  url: string,
+  userType: UserType,
+  options: RequestInit = {},
+): Promise<Response> {
+  const doFetch = (token: string | null) =>
+    fetch(url, {
+      ...options,
+      credentials: "include",
+      headers: {
+        ...options.headers,
+        "X-User-Role": userType,
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+  const token = localStorage.getItem(AUTH_TOKEN);
+  let res = await doFetch(token);
+
+  if (res.status === 401) {
+    const newToken = await refreshAccessToken(userType);
+    res = await doFetch(newToken);
+  }
+
+  return res;
+}
 
 export async function sendRequest<T, K>(
   url: string,
-  method: string,
-  requiresAuth: boolean,
+  userType: UserType,
   payload?: T,
 ) {
-  const response = await fetch(`${API_URL}${url}`, {
-    method,
+  const response = await fetchWithAuth(`${API_URL}${url}`, userType, {
+    method: payload ? "POST" : "GET",
     body: payload ? JSON.stringify(payload) : null,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: requiresAuth ? `Bearer ${localStorage.getItem(AUTH_TOKEN)}` : "",
-    },
   });
-
   const result = (await response.json()) as {
-    data?: K,
-    message?: string,
-    error?: string
+    data?: K;
+    message?: string;
+    error?: string;
   };
 
   return { result, status: response.status };
@@ -35,14 +81,6 @@ export interface StartTripResponse {
 
 export interface InitiateCheckoutResponse {
   checkoutUrl: string;
-}
-
-export interface UserProfileResponse {
-  user: Rider | Driver
-}
-
-export interface AuthResponse {
-  token: string;
 }
 
 export interface StartTripRequest {

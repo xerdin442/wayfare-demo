@@ -1,5 +1,5 @@
 import { Clock } from "lucide-react";
-import { TripPreview, RideFare } from "@/lib/types";
+import { TripOverview, RideFare } from "@/lib/types";
 import {
   convertMetersToKilometers,
   convertSecondsToMinutes,
@@ -9,7 +9,7 @@ import { Button } from "./ui/button";
 import { CarPackageDetails } from "./CarPackageDetails";
 
 interface CarPackageSelectProps {
-  trip: TripPreview;
+  trip: TripOverview;
   onPackageSelect: (fare: RideFare) => void;
   setAmount: (amount: number) => void;
   onCancel: () => void;

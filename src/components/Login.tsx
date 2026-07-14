@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { API_URL, AUTH_TOKEN } from "@/lib/constants";
 import { Driver, Rider, UserType } from "@/lib/types";
-import { fetchWithAuth } from "@/lib/api";
+import { fetchWithAuth } from "@/lib/contracts/http";
 
 interface LoginProps {
   userType: UserType;
