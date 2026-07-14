@@ -21,9 +21,10 @@ import {
   LocationDataResponse,
 } from "@/lib/contracts/http";
 import { TripEvents } from "@/lib/contracts/websocket";
-import { TripOverview, RideFare, Rider, Coordinate } from "@/lib/types";
+import { RideFare, Rider, Coordinate } from "@/lib/types";
 import { useLocationTracker } from "@/hooks/useLocationTracker";
 import { useRiderStreamConnection } from "@/hooks/useRiderStreamConnection";
+import { useRiderTripStore } from "@/lib/store/riderTrip";
 import { DriverCard } from "./DriverCard";
 import LoadingMap from "./LoadingMap";
 import MapSearchOverlay from "./MapSearchOverlay";
@@ -32,7 +33,6 @@ import TripRatingModal from "./TripRatingModal";
 import UnsupportedRegion from "./UnsupportedRegion";
 
 export default function RiderMap({ user }: { user: Rider }) {
-  const [tripOverview, setTripOverview] = useState<TripOverview | null>(null);
   const [destination, setDestination] = useState<Coordinate | null>(null);
   const [currentAddress, setCurrentAddress] = useState<string>("");
 
@@ -40,18 +40,19 @@ export default function RiderMap({ user }: { user: Rider }) {
   const debounceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { location, mapPosition } = useLocationTracker();
+  const { sendMessage, error } = useRiderStreamConnection(user.id, location);
   const {
-    error,
     regionBounds,
     tripStatus,
     tripRatingData,
     requestedTrip,
     assignedDriver,
     driverLocation,
+    tripOverview,
     setTripStatus,
-    resetTripStatus,
-    sendMessage,
-  } = useRiderStreamConnection(user.id, location);
+    setTripOverview,
+    resetRiderTrip,
+  } = useRiderTripStore();
 
   useEffect(() => {
     if (!mapPosition) return;
@@ -219,9 +220,8 @@ export default function RiderMap({ user }: { user: Rider }) {
   };
 
   const resetTripOverview = () => {
-    setTripOverview(null);
     setDestination(null);
-    resetTripStatus();
+    resetRiderTrip();
   };
 
   if (error) {
@@ -305,9 +305,6 @@ export default function RiderMap({ user }: { user: Rider }) {
 
         <div className="flex-[0.4]">
           <RiderTripOverview
-            trip={tripOverview}
-            assignedDriver={assignedDriver}
-            status={tripStatus}
             handleStartTrip={handleStartTrip}
             handleCheckout={handleCheckout}
             handleCashPayment={handleCashPayment}
@@ -321,7 +318,7 @@ export default function RiderMap({ user }: { user: Rider }) {
         <TripRatingModal
           data={tripRatingData}
           confirmSubmit={sendMessage}
-          onClose={resetTripStatus}
+          onClose={() => resetRiderTrip()}
         />
       )}
 

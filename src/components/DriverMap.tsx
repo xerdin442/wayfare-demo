@@ -7,6 +7,7 @@ import { DriverTripActionRequest, TripEvents } from "@/lib/contracts/websocket";
 import { Driver } from "@/lib/types";
 import { DriverTripOverview } from "./DriverTripOverview";
 import { useDriverStreamConnection } from "@/hooks/useDriverStreamConnection";
+import { useDriverTripStore } from "@/lib/store/driverTrip";
 import { useLocationTracker } from "@/hooks/useLocationTracker";
 import LoadingMap from "./LoadingMap";
 
@@ -14,14 +15,13 @@ export const DriverMap = ({ user }: { user: Driver }) => {
   const mapCenterRef = useRef<[number, number] | null>(null);
   const { location: driverLocation, mapPosition } = useLocationTracker();
 
-  const {
-    error,
-    tripStatus,
-    requestedTrip,
-    sendMessage,
-    setTripStatus,
-    resetTripStatus,
-  } = useDriverStreamConnection(user.id, driverLocation);
+  const { sendMessage, error } = useDriverStreamConnection(
+    user.id,
+    driverLocation,
+  );
+
+  const { requestedTrip, setTripStatus, resetDriverTrip } =
+    useDriverTripStore();
 
   const handleTripAction = (
     action: DriverTripActionRequest["type"],
@@ -41,7 +41,7 @@ export const DriverMap = ({ user }: { user: Driver }) => {
       action === TripEvents.DriverTripDecline ||
       action === TripEvents.TripCancelled
     ) {
-      resetTripStatus();
+      resetDriverTrip();
     } else {
       setTripStatus(action);
     }
@@ -130,10 +130,8 @@ export const DriverMap = ({ user }: { user: Driver }) => {
 
       <div className="overflow-y-auto md:w-100 bg-white border-t md:border-t-0 md:border-l">
         <DriverTripOverview
-          trip={requestedTrip}
-          status={tripStatus}
           handleTripAction={handleTripAction}
-          onReset={resetTripStatus}
+          onReset={resetDriverTrip}
         />
       </div>
     </div>

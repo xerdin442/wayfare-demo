@@ -1,52 +1,58 @@
-import { WEBSOCKET_URL } from '@/lib/constants';
-import { TripEvents, ServerWsResponse, isValidWsMessage, ClientWsMessage } from '@/lib/contracts/websocket';
-import { Coordinate, Driver, RatingRequiredData, RegionBounds, Trip } from '@/lib/types';
-import { useCallback, useEffect, useState } from 'react';
+import { WEBSOCKET_URL } from "@/lib/constants";
+import {
+  TripEvents,
+  ServerWsResponse,
+  isValidWsMessage,
+  ClientWsMessage,
+} from "@/lib/contracts/websocket";
+import { Coordinate } from "@/lib/types";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useRiderTripStore } from "@/lib/store/riderTrip";
 
-export function useRiderStreamConnection(userId: string, location?: Coordinate) {
-  const [tripStatus, setTripStatus] = useState<TripEvents | null>(null);
-  const [requestedTrip, setRequestedTrip] = useState<Trip | null>(null);
-  const [tripRatingData, setTripRatingData] = useState<RatingRequiredData | null>(null);
-  const [assignedDriver, setAssignedDriver] = useState<Driver | null>(null);
-  const [driverLocation, setDriverLocation] = useState<Coordinate | null>(null);
-  const [regionBounds, setRegionBounds] = useState<RegionBounds | null>(null);
+export function useRiderStreamConnection(
+  userId: string,
+  location?: Coordinate,
+) {
   const [error, setError] = useState<string | null>(null);
-  const [ws, setWs] = useState<WebSocket | null>(null);
+  const wsRef = useRef<WebSocket | null>(null);
 
-  const resetTripStatus = () => {
-    setTripStatus(null);
-    setAssignedDriver(null);
-    setDriverLocation(null);
-    setRequestedTrip(null);
-    setTripRatingData(null);
-  }
+  const {
+    setTripStatus,
+    setRequestedTrip,
+    setTripRatingData,
+    setAssignedDriver,
+    setDriverLocation,
+    setRegionBounds,
+    resetRiderTrip,
+  } = useRiderTripStore();
 
   const sendMessage = useCallback((message: ClientWsMessage) => {
-    if (!ws || ws.readyState !== WebSocket.OPEN) return;
-    ws.send(JSON.stringify(message));
-  }, [ws]);
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    wsRef.current.send(JSON.stringify(message));
+  }, []);
 
   useEffect(() => {
-    if (!ws || !location) return;
+    if (!wsRef.current || !location) return;
 
     sendMessage({
       type: TripEvents.RegionBoundsRequest,
-      data: { pickup: location }
-    })
-  }, [ws, location, sendMessage]);
+      data: { pickup: location },
+    });
+  }, [location, sendMessage]);
 
   useEffect(() => {
     if (!userId) return;
 
     const ws = new WebSocket(`${WEBSOCKET_URL}/riders?user_id=${userId}`);
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setWs(ws)
+    wsRef.current = ws;
 
     ws.onmessage = (event) => {
       const message = JSON.parse(event.data) as ServerWsResponse;
 
       if (!message || !isValidWsMessage(message)) {
-        setError(`Unknown message type "${message}", allowed types are: ${Object.values(TripEvents).join(', ')}`);
+        setError(
+          `Unknown message type "${message}", allowed types are: ${Object.values(TripEvents).join(", ")}`,
+        );
         return;
       }
 
@@ -64,7 +70,7 @@ export function useRiderStreamConnection(userId: string, location?: Coordinate) 
           break;
         case TripEvents.TripCancelled:
           setTripStatus(message.type);
-          resetTripStatus();
+          resetRiderTrip();
           break;
         case TripEvents.DriverAssigned:
           setAssignedDriver(message.data.driver);
@@ -75,8 +81,8 @@ export function useRiderStreamConnection(userId: string, location?: Coordinate) 
           setDriverLocation(message.data);
           break;
         case TripEvents.TripRatingRequired:
-          setTripStatus(message.type)
-          setTripRatingData(message.data)
+          setTripStatus(message.type);
+          setTripRatingData(message.data);
           break;
       }
     };
@@ -86,27 +92,25 @@ export function useRiderStreamConnection(userId: string, location?: Coordinate) 
     };
 
     ws.onerror = () => {
-      setError('WebSocket error occurred');
+      setError("WebSocket error occurred");
     };
 
     return () => {
-      console.log('Closing WebSocket...');
+      console.log("Closing WebSocket...");
       if (ws.readyState === WebSocket.OPEN) {
         ws.close();
       }
     };
-  }, [userId]);
-
-  return {
-    regionBounds,
-    driverLocation,
-    assignedDriver,
-    requestedTrip,
-    tripRatingData,
-    tripStatus,
+  }, [
+    userId,
     setTripStatus,
-    resetTripStatus,
-    sendMessage,
-    error
-  };
+    setRequestedTrip,
+    setTripRatingData,
+    setAssignedDriver,
+    setDriverLocation,
+    setRegionBounds,
+    resetRiderTrip,
+  ]);
+
+  return { sendMessage, error };
 }

@@ -3,7 +3,7 @@ import { Button } from "./ui/button";
 import { Skeleton } from "./ui/skeleton";
 import { DriverCard } from "./DriverCard";
 import { TripEvents } from "@/lib/contracts/websocket";
-import { TripOverview, Driver, RideFare } from "@/lib/types";
+import { RideFare } from "@/lib/types";
 import {
   convertSecondsToMinutes,
   convertMetersToKilometers,
@@ -11,11 +11,9 @@ import {
 import { TripOverviewCard } from "./TripOverviewCard";
 import { useState } from "react";
 import CheckoutDetails from "./CheckoutDetails";
+import { useRiderTripStore } from "@/lib/store/riderTrip";
 
 interface RiderTripOverviewProps {
-  trip: TripOverview | null;
-  status: TripEvents | null;
-  assignedDriver?: Driver | null;
   handleStartTrip: (fare: RideFare) => void;
   handleCheckout: (rating: number, comment?: string, tip?: number) => void;
   handleCashPayment: () => void;
@@ -24,9 +22,6 @@ interface RiderTripOverviewProps {
 }
 
 export const RiderTripOverview = ({
-  trip,
-  status,
-  assignedDriver,
   handleStartTrip,
   handleCheckout,
   handleCancelTrip,
@@ -38,6 +33,12 @@ export const RiderTripOverview = ({
   const [comment, setComment] = useState<string>();
   const [driverTip, setDriverTip] = useState<number>();
   const [checkoutPreferred, setCheckoutPreferred] = useState<boolean>(false);
+
+  const {
+    tripOverview: trip,
+    tripStatus: status,
+    assignedDriver,
+  } = useRiderTripStore();
 
   if (!trip) {
     return (

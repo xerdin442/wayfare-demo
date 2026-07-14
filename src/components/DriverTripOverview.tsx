@@ -1,13 +1,11 @@
 import { TripEvents } from "@/lib/contracts/websocket";
-import { Trip } from "@/lib/types";
 import { Button } from "./ui/button";
 import { TripOverviewCard } from "./TripOverviewCard";
 import { DriverTripActionRequest } from "@/lib/contracts/websocket";
 import { convertSecondsToMinutes } from "@/lib/utils";
+import { useDriverTripStore } from "@/lib/store/driverTrip";
 
 interface DriverTripOverviewProps {
-  trip?: Trip | null;
-  status?: TripEvents | null;
   handleTripAction: (
     action: DriverTripActionRequest["type"],
     request?: boolean,
@@ -16,12 +14,12 @@ interface DriverTripOverviewProps {
 }
 
 export const DriverTripOverview = ({
-  trip,
-  status,
   handleTripAction,
   onReset,
 }: DriverTripOverviewProps) => {
-  if (!trip) {
+  const { requestedTrip, tripStatus } = useDriverTripStore();
+
+  if (!requestedTrip) {
     return (
       <TripOverviewCard
         title="Waiting for a rider..."
@@ -30,7 +28,7 @@ export const DriverTripOverview = ({
     );
   }
 
-  if (status === TripEvents.DriverTripRequest) {
+  if (tripStatus === TripEvents.DriverTripRequest) {
     return (
       <TripOverviewCard
         title="Trip request received!"
@@ -54,7 +52,7 @@ export const DriverTripOverview = ({
     );
   }
 
-  if (status === TripEvents.TripCompleted) {
+  if (tripStatus === TripEvents.TripCompleted) {
     return (
       <TripOverviewCard
         title="Trip completed!"
@@ -65,7 +63,7 @@ export const DriverTripOverview = ({
     );
   }
 
-  if (status === TripEvents.CashOptionPreferred) {
+  if (tripStatus === TripEvents.CashOptionPreferred) {
     return (
       <TripOverviewCard
         title="Payment notice"
@@ -80,7 +78,7 @@ export const DriverTripOverview = ({
     );
   }
 
-  if (status === TripEvents.DriverEndTrip) {
+  if (tripStatus === TripEvents.DriverEndTrip) {
     return (
       <TripOverviewCard
         title="Awaiting payment"
@@ -89,11 +87,13 @@ export const DriverTripOverview = ({
     );
   }
 
-  if (status === TripEvents.DriverStartTrip) {
+  if (tripStatus === TripEvents.DriverStartTrip) {
     return (
       <TripOverviewCard
         title="Trip started!"
-        description={`You'll arrive at your destination in ${convertSecondsToMinutes(trip.selectedFare.route.duration)}`}
+        description={`
+          You'll arrive at your destination in ${convertSecondsToMinutes(requestedTrip.selectedFare.route.duration)}
+        `}
       >
         <Button onClick={() => handleTripAction(TripEvents.DriverEndTrip)}>
           End trip
@@ -102,7 +102,7 @@ export const DriverTripOverview = ({
     );
   }
 
-  if (status === TripEvents.DriverConfirmPickup) {
+  if (tripStatus === TripEvents.DriverConfirmPickup) {
     return (
       <TripOverviewCard
         title="All set!"
@@ -115,7 +115,7 @@ export const DriverTripOverview = ({
     );
   }
 
-  if (status === TripEvents.DriverTripAccept) {
+  if (tripStatus === TripEvents.DriverTripAccept) {
     return (
       <TripOverviewCard
         title="Almost there!"
@@ -137,8 +137,8 @@ export const DriverTripOverview = ({
   }
 
   if (
-    status === TripEvents.TripCancelled ||
-    status === TripEvents.TripAborted
+    tripStatus === TripEvents.TripCancelled ||
+    tripStatus === TripEvents.TripAborted
   ) {
     return (
       <TripOverviewCard
