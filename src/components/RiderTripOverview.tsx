@@ -12,6 +12,21 @@ import { TripOverviewCard } from "./TripOverviewCard";
 import { useState } from "react";
 import CheckoutDetails from "./CheckoutDetails";
 import { useRiderTripStore } from "@/lib/store/riderTrip";
+import {
+  MapPinned,
+  Clock,
+  Route,
+  CarFront,
+  Search,
+  CheckCircle2,
+  XCircle,
+  AlertTriangle,
+  ShieldAlert,
+  Loader2,
+  CreditCard,
+  Banknote,
+  Dot,
+} from "lucide-react";
 
 interface RiderTripOverviewProps {
   handleStartTrip: (fare: RideFare) => void;
@@ -44,7 +59,8 @@ export const RiderTripOverview = ({
     return (
       <TripOverviewCard
         title="Where to?"
-        description="Search or pick a recent location to get started"
+        description="Search for a destination to get started"
+        icon={Search}
       />
     );
   }
@@ -52,12 +68,16 @@ export const RiderTripOverview = ({
   if (status === TripEvents.TripCancelled) {
     return (
       <TripOverviewCard
-        title="Trip cancelled!"
-        description="The driver has cancelled the trip. Find another driver or try again later."
+        title="Trip cancelled"
+        description="Your trip has been cancelled. You can request another ride whenever you're ready."
+        icon={XCircle}
+        variant="error"
       >
-        <Button variant="outline" className="w-full" onClick={onReset}>
-          Go back
-        </Button>
+        <div className="pt-4">
+          <Button variant="outline" className="w-full" onClick={onReset}>
+            Find another ride
+          </Button>
+        </div>
       </TripOverviewCard>
     );
   }
@@ -65,12 +85,16 @@ export const RiderTripOverview = ({
   if (status === TripEvents.PaymentSuccess) {
     return (
       <TripOverviewCard
-        title="Trip completed!"
-        description="Your trip has ended. Thank you for choosing Wayfare!"
+        title="Payment confirmed"
+        description="Thanks for riding with Wayfare! We hope you enjoyed your trip."
+        icon={CheckCircle2}
+        variant="success"
       >
-        <Button variant="outline" className="w-full" onClick={onReset}>
-          Go back
-        </Button>
+        <div className="pt-4">
+          <Button variant="outline" className="w-full" onClick={onReset}>
+            Done
+          </Button>
+        </div>
       </TripOverviewCard>
     );
   }
@@ -78,12 +102,20 @@ export const RiderTripOverview = ({
   if (status === TripEvents.PaymentFailed) {
     return (
       <TripOverviewCard
-        title="Payment failed!"
-        description="Your payment failed, please try another method"
+        title="Payment failed"
+        description="We couldn't process your payment. Please try again or use an alternative method."
+        icon={ShieldAlert}
+        variant="error"
       >
-        <Button className="w-full mt-2.5" onClick={handleCashPayment}>
-          Pay with cash
-        </Button>
+        <div className="flex flex-col gap-2 pt-4">
+          <Button className="w-full" onClick={handleCashPayment}>
+            <Banknote className="w-4 h-4 mr-2" />
+            Pay with cash
+          </Button>
+          <Button variant="outline" className="w-full" onClick={onReset}>
+            Cancel
+          </Button>
+        </div>
       </TripOverviewCard>
     );
   }
@@ -94,50 +126,69 @@ export const RiderTripOverview = ({
   ) {
     return (
       <TripOverviewCard
-        title="Processing..."
-        description="Please wait while we confirm your payment"
-      ></TripOverviewCard>
+        title="Processing payment"
+        description="Please wait a moment while we confirm your payment. This shouldn't take long."
+        icon={Loader2}
+      >
+        <div className="flex justify-center pt-4">
+          <Loader2 className="w-8 h-8 text-gray-400 animate-spin" />
+        </div>
+      </TripOverviewCard>
     );
   }
 
   if (status === TripEvents.PaymentRequired) {
     return (
       <TripOverviewCard
-        title="Payment Required"
-        description="Rate your experience and select a payment method to complete your trip"
+        title="Payment"
+        description="Rate your trip and choose how you'd like to pay"
+        icon={CreditCard}
       >
-        <div className="flex flex-col gap-4">
-          {checkoutPreferred && (
-            <CheckoutDetails
-              setRating={setRating}
-              setComment={setComment}
-              setDriverTip={setDriverTip}
-            />
+        <div className="flex flex-col gap-3 pt-2">
+          {!checkoutPreferred ? (
+            <>
+              <Button
+                className="w-full"
+                onClick={() => setCheckoutPreferred(true)}
+              >
+                <CreditCard className="w-4 h-4 mr-2" />
+                Pay online
+              </Button>
+              <Button
+                variant="secondary"
+                className="w-full"
+                onClick={handleCashPayment}
+              >
+                <Banknote className="w-4 h-4 mr-2" />
+                Pay with cash
+              </Button>
+            </>
+          ) : (
+            <>
+              <CheckoutDetails
+                setRating={setRating}
+                setComment={setComment}
+                setDriverTip={setDriverTip}
+              />
+              <div className="text-sm text-gray-500 text-center">
+                Amount: ₦{(amount ?? 0) / 100}
+              </div>
+              <Button
+                className="w-full"
+                disabled={rating === 0}
+                onClick={() => handleCheckout(rating, comment, driverTip)}
+              >
+                Confirm payment
+              </Button>
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => setCheckoutPreferred(false)}
+              >
+                Back
+              </Button>
+            </>
           )}
-
-          <div className="text-sm text-gray-500">
-            <p>Amount to pay: {amount}</p>
-          </div>
-
-          <Button
-            className="w-full"
-            disabled={checkoutPreferred && rating === 0}
-            onClick={
-              checkoutPreferred
-                ? () => handleCheckout(rating, comment, driverTip)
-                : () => setCheckoutPreferred(true)
-            }
-          >
-            {checkoutPreferred ? "Go to checkout" : "Pay online"}
-          </Button>
-
-          <Button
-            className="w-full mt-2.5"
-            disabled={checkoutPreferred}
-            onClick={handleCashPayment}
-          >
-            Pay with cash
-          </Button>
         </div>
       </TripOverviewCard>
     );
@@ -146,12 +197,16 @@ export const RiderTripOverview = ({
   if (status === TripEvents.NoDriversFound) {
     return (
       <TripOverviewCard
-        title="No Drivers Found"
-        description="There are no drivers available right now. Please try again later"
+        title="No drivers nearby"
+        description="There aren't any drivers available in your area right now. Please try again in a few minutes."
+        icon={AlertTriangle}
+        variant="warning"
       >
-        <Button variant="outline" className="w-full" onClick={onReset}>
-          Go back
-        </Button>
+        <div className="pt-4">
+          <Button variant="outline" className="w-full" onClick={onReset}>
+            Try again
+          </Button>
+        </div>
       </TripOverviewCard>
     );
   }
@@ -159,17 +214,63 @@ export const RiderTripOverview = ({
   if (status === TripEvents.DriverAssigned) {
     return (
       <TripOverviewCard
-        title="Driver Found!"
-        description="Your driver is on the way, please wait for them to arrive."
+        title="Your driver is on the way"
+        description=""
+        icon={CarFront}
       >
-        <DriverCard driver={assignedDriver} />
-        <Button
-          variant="destructive"
-          className="w-full mt-2.5"
-          onClick={handleCancelTrip}
-        >
-          Cancel trip
-        </Button>
+        <div className="flex flex-col gap-4">
+          {trip && (
+            <div className="flex flex-col gap-1 py-2">
+              <div className="flex items-start gap-2">
+                <div className="flex flex-col items-center shrink-0 pt-0.5">
+                  <div className="w-2.5 h-2.5 rounded-full bg-blue-500 ring-2 ring-blue-100" />
+                  <div className="w-px h-6 bg-gray-200 my-0.5" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-red-500 ring-2 ring-red-100" />
+                </div>
+                <div className="flex flex-col gap-3 min-w-0">
+                  <div>
+                    <p className="text-xs font-medium text-blue-600 uppercase tracking-wide">
+                      Pickup
+                    </p>
+                    <p className="text-sm text-gray-900 leading-tight truncate">
+                      Your current location
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-xs font-medium text-red-600 uppercase tracking-wide">
+                      Destination
+                    </p>
+                    <p className="text-sm text-gray-900 leading-tight truncate">
+                      Drop-off point
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <DriverCard driver={assignedDriver} />
+
+          <div className="flex items-center gap-4 text-sm text-gray-500 bg-gray-50 rounded-lg px-4 py-3">
+            <div className="flex items-center gap-1.5">
+              <Clock className="w-4 h-4" />
+              <span>{convertSecondsToMinutes(trip?.duration ?? 0)}</span>
+            </div>
+            <div className="w-px h-4 bg-gray-200" />
+            <div className="flex items-center gap-1.5">
+              <Route className="w-4 h-4" />
+              <span>{convertMetersToKilometers(trip?.distance ?? 0)}</span>
+            </div>
+          </div>
+
+          <Button
+            variant="destructive"
+            className="w-full"
+            onClick={handleCancelTrip}
+          >
+            Cancel trip
+          </Button>
+        </div>
       </TripOverviewCard>
     );
   }
@@ -177,44 +278,69 @@ export const RiderTripOverview = ({
   if (status === TripEvents.DriverArrival) {
     return (
       <TripOverviewCard
-        title="Driver Arrived"
-        description="Your driver has arrived at the pickup location"
-      ></TripOverviewCard>
+        title="Driver has arrived"
+        description="Your driver is at the pickup point. Please head outside to meet them."
+        icon={MapPinned}
+      >
+        <div className="flex flex-col gap-4 pt-2">
+          <DriverCard driver={assignedDriver} />
+          <Button
+            variant="destructive"
+            className="w-full"
+            onClick={handleCancelTrip}
+          >
+            Cancel trip
+          </Button>
+        </div>
+      </TripOverviewCard>
     );
   }
 
   if (status === TripEvents.TripStarted) {
     return (
-      <TripOverviewCard
-        title="Trip Started"
-        description="Your trip has started, please enjoy your ride"
-      ></TripOverviewCard>
+      <TripOverviewCard title="On your way" description="" icon={CarFront}>
+        <div className="flex flex-col gap-4">
+          {trip && (
+            <div className="flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3">
+              <div className="flex items-center gap-2">
+                <Clock className="w-4 h-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">
+                  {convertSecondsToMinutes(trip.duration)}
+                </span>
+              </div>
+              <Dot className="w-4 h-4 text-gray-300" />
+              <div className="flex items-center gap-2">
+                <Route className="w-4 h-4 text-gray-500" />
+                <span className="text-sm font-medium text-gray-700">
+                  {convertMetersToKilometers(trip.distance)}
+                </span>
+              </div>
+            </div>
+          )}
+          {assignedDriver && <DriverCard driver={assignedDriver} />}
+        </div>
+      </TripOverviewCard>
     );
   }
 
   if (amount && !assignedDriver) {
     return (
       <TripOverviewCard
-        title="Searching..."
-        description="We're connecting you with a driver, hang tight..."
+        title="Finding your ride"
+        description="Hang tight, we're connecting you with a nearby driver..."
       >
-        <div className="flex flex-col space-y-3 justify-center items-center mb-4">
-          <Skeleton className="h-31.25 w-62.5 rounded-xl" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-62.5" />
-            <Skeleton className="h-4 w-50" />
+        <div className="flex flex-col justify-center items-center gap-4">
+          <div className="flex flex-col items-start gap-3 pt-4 pb-2">
+            <Skeleton className="h-32 w-64 rounded-lg" />
+            <div className="space-y-2">
+              <Skeleton className="h-6 w-60" />
+              <Skeleton className="h-4 w-50" />
+            </div>
           </div>
-        </div>
-
-        <div className="flex flex-col items-center justify-center gap-2">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">
-            Arriving in {convertSecondsToMinutes(trip.duration)} at your
-            destination ({convertMetersToKilometers(trip.distance)})
-          </h3>
 
           <Button
             variant="destructive"
-            className="w-full"
+            className="w-4/5 h-11 text-base mx-auto"
             onClick={() => {
               handleCancelTrip();
               setAmount(0);

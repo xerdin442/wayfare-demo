@@ -5,7 +5,7 @@ import {
   isValidWsMessage,
   ClientWsMessage,
 } from "@/lib/contracts/websocket";
-import { Coordinate } from "@/lib/types";
+import { CarPackageSlug, Coordinate, Driver, DriverTier } from "@/lib/types";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRiderTripStore } from "@/lib/store/riderTrip";
 
@@ -42,6 +42,73 @@ export function useRiderStreamConnection(
 
   useEffect(() => {
     if (!userId) return;
+
+    if (process.env.NEXT_PUBLIC_MOCK_MODE === "true") {
+      if (!location) return;
+
+      setRegionBounds({
+        region_id: "test-region",
+        min_longitude: location.longitude - 0.3,
+        min_latitude: location.latitude - 0.1,
+        max_longitude: location.longitude + 0.3,
+        max_latitude: location.latitude + 0.1,
+        unavailable: false,
+      });
+
+      const mockDriver: Driver = {
+        id: "mock-driver-1",
+        name: "Hector Miles",
+        email: "driver@example.com",
+        phone: "08012345678",
+        profilePicture: "",
+        carModel: "Toyota Camry SE",
+        carColor: "Red",
+        carPlate: "ABC-123",
+        packageSlug: CarPackageSlug.SEDAN,
+        currentRating: 4.8,
+        totalCompletedTrips: 431,
+        tier: DriverTier.SILVER,
+      };
+
+      const mockRoute = {
+        geometry: [
+          {
+            coordinates: [
+              location,
+              {
+                latitude: location.latitude + 0.002,
+                longitude: location.longitude + 0.003,
+              },
+            ],
+          },
+        ],
+        duration: 1200,
+        distance: 8500,
+      };
+
+      setRequestedTrip({
+        id: "mock-trip-1",
+        userId,
+        driverId: mockDriver.id,
+        status: "assigned",
+        selectedFare: {
+          id: "mock-sedan",
+          packageSlug: CarPackageSlug.SEDAN,
+          amount: 350000,
+          route: mockRoute,
+        },
+      });
+
+      setAssignedDriver(mockDriver);
+
+      setDriverLocation({
+        latitude: location.latitude + 0.004,
+        longitude: location.longitude + 0.003,
+      });
+
+      setTripStatus(TripEvents.DriverAssigned);
+      return;
+    }
 
     const ws = new WebSocket(`${WEBSOCKET_URL}/riders?user_id=${userId}`);
     wsRef.current = ws;
@@ -103,6 +170,7 @@ export function useRiderStreamConnection(
     };
   }, [
     userId,
+    location,
     setTripStatus,
     setRequestedTrip,
     setTripRatingData,

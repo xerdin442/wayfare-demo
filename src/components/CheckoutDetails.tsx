@@ -37,50 +37,51 @@ export default function CheckoutDetails({
   const activeStar = hoveredStar || selectedStar;
 
   return (
-    <div className="flex flex-col gap-7 p-6 bg-white rounded-2xl">
-      {/* Rating */}
+    <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
-        <label className="text-xs font-semibold uppercase tracking-wider text-gray-400">
+        <label className="text-xs font-semibold uppercase tracking-wide text-gray-400">
           Rate your experience
         </label>
-        {[1, 2, 3, 4, 5].map((n) => (
-          <button
-            key={n}
-            type="button"
-            onClick={() => handleStarClick(n)}
-            onMouseEnter={() => setHoveredStar(n)}
-            onMouseLeave={() => setHoveredStar(0)}
-            className="p-0.5 transition-transform duration-150 hover:scale-125"
-            aria-label={`${n} star${n > 1 ? "s" : ""}`}
-          >
-            <Star
-              size={28}
-              strokeWidth={1.5}
-              className="transition-colors duration-150"
-              fill={n <= activeStar ? "#F59E0B" : "none"}
-              color={n <= activeStar ? "#F59E0B" : "#D1D5DB"}
-            />
-          </button>
-        ))}
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((n) => (
+            <button
+              key={n}
+              type="button"
+              onClick={() => handleStarClick(n)}
+              onMouseEnter={() => setHoveredStar(n)}
+              onMouseLeave={() => setHoveredStar(0)}
+              className="p-1 transition-transform duration-150 hover:scale-115"
+              aria-label={`${n} star${n > 1 ? "s" : ""}`}
+            >
+              <Star
+                size={26}
+                strokeWidth={1.5}
+                className="transition-colors duration-150"
+                fill={n <= activeStar ? "#F59E0B" : "none"}
+                color={n <= activeStar ? "#F59E0B" : "#D1D5DB"}
+              />
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Comment */}
       <div className="flex flex-col gap-2">
         <label
           htmlFor="checkout-comment"
-          className="text-xs font-semibold uppercase tracking-widest text-gray-400"
+          className="text-xs font-semibold uppercase tracking-wide text-gray-400"
         >
-          Any comments?{" "}
-          <span className="normal-case tracking-normal font-normal text-gray-300">
+          Add a comment
+          <span className="normal-case tracking-normal font-normal text-gray-300 ml-1">
             (optional)
           </span>
         </label>
         <textarea
           id="checkout-comment"
-          rows={3}
-          placeholder="Tell us about your experience…"
+          rows={2}
+          placeholder="How was your ride?"
           onChange={(e) => setComment(e.target.value)}
-          className="resize-none w-full px-3.5 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-300 outline-none focus:border-amber-400 transition-colors duration-200"
+          className="resize-none w-full px-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm text-gray-800 placeholder-gray-300 outline-none focus:border-gray-400 focus:bg-white transition-colors duration-200"
         />
       </div>
 
@@ -88,14 +89,13 @@ export default function CheckoutDetails({
       <div className="flex flex-col gap-2">
         <label
           htmlFor="checkout-tip"
-          className="text-xs font-semibold uppercase tracking-widest text-gray-400"
+          className="text-xs font-semibold uppercase tracking-wide text-gray-400"
         >
           Driver tip
         </label>
-
         <div className="relative">
-          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-300 pointer-events-none">
-            ₦
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-gray-400 pointer-events-none">
+            &#8358;
           </span>
           <input
             id="checkout-tip"
@@ -104,11 +104,9 @@ export default function CheckoutDetails({
             placeholder="0"
             value={tipInput}
             onChange={(e) => handleTipInput(e.target.value)}
-            className="w-full pl-7 pr-3.5 py-3 rounded-xl border border-gray-200 bg-gray-50 text-sm font-medium text-gray-800 placeholder-gray-300 outline-none focus:border-amber-400 transition-colors duration-200"
+            className="w-full pl-7 pr-3 py-2.5 rounded-lg border border-gray-200 bg-gray-50 text-sm font-medium text-gray-800 placeholder-gray-300 outline-none focus:border-gray-400 focus:bg-white transition-colors duration-200"
           />
         </div>
-
-        {/* Tip suggestions */}
         <div className="grid grid-cols-3 gap-2">
           {TIP_SUGGESTIONS.map((amount) => {
             const isSelected = tipInput === amount.toLocaleString();
@@ -117,14 +115,14 @@ export default function CheckoutDetails({
                 key={amount}
                 type="button"
                 onClick={() => handleSuggestionClick(amount)}
-                className={`py-2.5 px-2 rounded-lg border text-xs font-medium transition-all duration-150 text-center
+                className={`py-2 px-2 rounded-lg border text-xs font-medium transition-all duration-150 text-center
                   ${
                     isSelected
-                      ? "border-amber-400 bg-amber-50 text-amber-700 font-semibold"
-                      : "border-gray-200 bg-gray-100 text-gray-600 hover:border-gray-300"
+                      ? "border-gray-800 bg-gray-800 text-white"
+                      : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
                   }`}
               >
-                ₦{amount.toLocaleString()}
+                &#8358;{amount.toLocaleString()}
               </button>
             );
           })}

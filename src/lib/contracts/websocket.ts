@@ -1,4 +1,10 @@
-import { Coordinate, Driver, RatingRequiredData, RegionBounds, Trip } from "../types";
+import {
+  Coordinate,
+  Driver,
+  RatingRequiredData,
+  RegionBounds,
+  Trip,
+} from "../types";
 
 export enum TripEvents {
   NoDriversFound = "trip.event.no_drivers_found",
@@ -23,7 +29,7 @@ export enum TripEvents {
   PaymentSuccess = "payment.event.success",
   PaymentFailed = "payment.event.failed",
   CashPaymentReceived = "payment.event.cash_payment_received",
-  CashOptionPreferred = "payment.event.cash_option_preferred"
+  CashOptionPreferred = "payment.event.cash_option_preferred",
 }
 
 export type ServerWsResponse =
@@ -67,7 +73,7 @@ interface DriverLocationResponse {
 }
 
 interface DriverArrivalResponse {
-  type: TripEvents.DriverArrival
+  type: TripEvents.DriverArrival;
 }
 
 interface RegionBoundsResponse {
@@ -77,34 +83,34 @@ interface RegionBoundsResponse {
 
 interface TripUpdateResponse {
   type:
-  | TripEvents.TripCancelled
-  | TripEvents.TripCompleted
-  | TripEvents.TripAborted
-  | TripEvents.TripStarted
+    | TripEvents.TripCancelled
+    | TripEvents.TripCompleted
+    | TripEvents.TripAborted
+    | TripEvents.TripStarted;
 }
 
 interface PaymentEventResponse {
   type:
-  | TripEvents.PaymentRequired
-  | TripEvents.CashOptionPreferred
-  | TripEvents.PaymentSuccess
-  | TripEvents.PaymentFailed;
+    | TripEvents.PaymentRequired
+    | TripEvents.CashOptionPreferred
+    | TripEvents.PaymentSuccess
+    | TripEvents.PaymentFailed;
 }
 
 interface TripRatingRequiredResponse {
-  type: TripEvents.TripRatingRequired,
-  data: RatingRequiredData
+  type: TripEvents.TripRatingRequired;
+  data: RatingRequiredData;
 }
 
 export interface DriverTripActionRequest {
   type:
-  | TripEvents.DriverTripAccept
-  | TripEvents.DriverTripDecline
-  | TripEvents.DriverConfirmPickup
-  | TripEvents.DriverStartTrip
-  | TripEvents.DriverEndTrip
-  | TripEvents.TripCancelled
-  | TripEvents.CashPaymentReceived;
+    | TripEvents.DriverTripAccept
+    | TripEvents.DriverTripDecline
+    | TripEvents.DriverConfirmPickup
+    | TripEvents.DriverStartTrip
+    | TripEvents.DriverEndTrip
+    | TripEvents.TripCancelled
+    | TripEvents.CashPaymentReceived;
   data: {
     trip: Trip;
     driver?: Driver;
@@ -114,30 +120,32 @@ export interface DriverTripActionRequest {
 interface DriverLocationUpdateRequest {
   type: TripEvents.DriverLocationUpdate;
   data: {
-    coords: Coordinate,
-    riderId?: string,
-  }
+    coords: Coordinate;
+    riderId?: string;
+  };
 }
 
 interface RegionBoundsRequest {
   type: TripEvents.RegionBoundsRequest;
-  data: { pickup: Coordinate }
+  data: { pickup: Coordinate };
 }
 
 interface RiderTripActionRequest {
   type: TripEvents.TripCancelled | TripEvents.CashOptionPreferred;
-  data: { trip: Trip; }
+  data: { trip: Trip };
 }
 
 interface TripRatingRequest {
-  type: TripEvents.TripRated,
+  type: TripEvents.TripRated;
   data: {
-    tripId: string,
-    rating: number
-    comment: string
-  }
+    tripId: string;
+    rating: number;
+    comment: string;
+  };
 }
 
-export function isValidWsMessage(message: ServerWsResponse): message is ServerWsResponse {
+export function isValidWsMessage(
+  message: ServerWsResponse,
+): message is ServerWsResponse {
   return Object.values(TripEvents).includes(message.type);
 }

@@ -21,7 +21,7 @@ import {
   LocationDataResponse,
 } from "@/lib/contracts/http";
 import { TripEvents } from "@/lib/contracts/websocket";
-import { RideFare, Rider, Coordinate } from "@/lib/types";
+import { RideFare, Rider, Coordinate, CarPackageSlug } from "@/lib/types";
 import { useLocationTracker } from "@/hooks/useLocationTracker";
 import { useRiderStreamConnection } from "@/hooks/useRiderStreamConnection";
 import { useRiderTripStore } from "@/lib/store/riderTrip";
@@ -129,6 +129,55 @@ export default function RiderMap({ user }: { user: Rider }) {
   ): Promise<PreviewTripResponse | null> => {
     if (!regionBounds) return null;
 
+    if (process.env.NEXT_PUBLIC_MOCK_MODE === "true") {
+      const midLat = (pickup.latitude + destination.latitude) / 2;
+      const midLon = (pickup.longitude + destination.longitude) / 2;
+      const mockRoute = {
+        geometry: [
+          {
+            coordinates: [
+              pickup,
+              {
+                latitude: pickup.latitude + 0.002,
+                longitude: pickup.longitude + 0.003,
+              },
+              { latitude: midLat, longitude: midLon },
+              {
+                latitude: destination.latitude - 0.002,
+                longitude: destination.longitude - 0.003,
+              },
+              destination,
+            ],
+          },
+        ],
+        duration: 1200,
+        distance: 8500,
+      };
+
+      return {
+        rideFares: [
+          {
+            id: "mock-sedan",
+            packageSlug: CarPackageSlug.SEDAN,
+            amount: 350000,
+            route: mockRoute,
+          },
+          {
+            id: "mock-suv",
+            packageSlug: CarPackageSlug.SUV,
+            amount: 500000,
+            route: mockRoute,
+          },
+          {
+            id: "mock-luxury",
+            packageSlug: CarPackageSlug.LUXURY,
+            amount: 850000,
+            route: mockRoute,
+          },
+        ],
+      };
+    }
+
     const payload: PreviewTripRequest = {
       regionId: regionBounds.region_id,
       pickup,
@@ -141,7 +190,6 @@ export default function RiderMap({ user }: { user: Rider }) {
     >("/trip/preview", "rider", payload);
 
     if (!result.data) {
-      // handle error display
       return null;
     }
 
@@ -150,6 +198,10 @@ export default function RiderMap({ user }: { user: Rider }) {
 
   const handleStartTrip = async (fare: RideFare) => {
     if (!fare.id) return;
+
+    if (process.env.NEXT_PUBLIC_MOCK_MODE === "true") {
+      return;
+    }
 
     const payload: StartTripRequest = {
       rideFareId: fare.id,
@@ -162,20 +214,21 @@ export default function RiderMap({ user }: { user: Rider }) {
     );
 
     if (!result.data) {
-      // handle error display
       return;
     }
-
-    return;
   };
 
   const handleCancelTrip = () => {
     if (!requestedTrip) return;
 
-    sendMessage({
-      type: TripEvents.TripCancelled,
-      data: { trip: requestedTrip },
-    });
+    if (process.env.NEXT_PUBLIC_MOCK_MODE === "true") {
+      setTripStatus(TripEvents.TripCancelled);
+    } else {
+      sendMessage({
+        type: TripEvents.TripCancelled,
+        data: { trip: requestedTrip },
+      });
+    }
 
     resetTripOverview();
   };
@@ -186,6 +239,11 @@ export default function RiderMap({ user }: { user: Rider }) {
     tip?: number,
   ) => {
     if (!requestedTrip) return;
+
+    if (process.env.NEXT_PUBLIC_MOCK_MODE === "true") {
+      setTripStatus(TripEvents.AwaitingWebhookStatus);
+      return;
+    }
 
     const payload: InitiateCheckoutRequest = {
       email: user.email,
@@ -211,10 +269,12 @@ export default function RiderMap({ user }: { user: Rider }) {
   const handleCashPayment = () => {
     if (!requestedTrip) return;
 
-    sendMessage({
-      type: TripEvents.CashOptionPreferred,
-      data: { trip: requestedTrip },
-    });
+    if (process.env.NEXT_PUBLIC_MOCK_MODE !== "true") {
+      sendMessage({
+        type: TripEvents.CashOptionPreferred,
+        data: { trip: requestedTrip },
+      });
+    }
 
     setTripStatus(TripEvents.CashOptionPreferred);
   };

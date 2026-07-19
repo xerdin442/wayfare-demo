@@ -1,10 +1,6 @@
 import { Clock } from "lucide-react";
 import { TripOverview, RideFare } from "@/lib/types";
-import {
-  convertMetersToKilometers,
-  convertSecondsToMinutes,
-  cn,
-} from "@/lib/utils";
+import { convertSecondsToMinutes, cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 import { CarPackageDetails } from "./CarPackageDetails";
 
@@ -22,16 +18,16 @@ export function CarPackageSelect({
   onCancel,
 }: CarPackageSelectProps) {
   return (
-    <div className="flex items-center justify-center p-4 min-h-screen bg-black/20">
+    <div className="flex items-center justify-center p-4 min-h-screen bg-gray-200">
       <div className="bg-white rounded-2xl shadow-lg p-6 max-w-md w-full">
         <h2 className="text-xl font-semibold mb-2">Select your desired ride</h2>
-        <p className="text-sm text-gray-500 mb-6">
-          Routing for {convertMetersToKilometers(trip.distance)}
-        </p>
-        <div className="flex items-center gap-1 text-sm text-gray-500 mb-2">
-          <Clock className="w-4 h-4" />
+        <div className="flex items-center gap-1 text-sm text-gray-600 mb-6">
+          <Clock className="w-4 h-4 text-black" />
           <span>
-            You&apos;ll arrive in {convertSecondsToMinutes(trip.duration)}
+            You&apos;ll arrive in{" "}
+            <span className="text-black font-semibold">
+              {convertSecondsToMinutes(trip.duration)}
+            </span>
           </span>
         </div>
         <div className="space-y-4">
@@ -63,14 +59,16 @@ export function CarPackageSelect({
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-xl">{price}</p>
+                  <p className="font-semibold text-xl tracking-[-0.015em]">
+                    {price}
+                  </p>
                 </div>
               </div>
             );
           })}
         </div>
-        <div className="mt-6 space-y-4">
-          <Button variant="outline" className="w-full" onClick={onCancel}>
+        <div className="mt-6">
+          <Button className="w-full h-11 text-base" onClick={onCancel}>
             Back to Map
           </Button>
         </div>

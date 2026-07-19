@@ -21,6 +21,11 @@ export function HomeContent() {
   const effectiveProfile = sessionExpired ? undefined : profile;
 
   const handleUserTypeSelection = (type: UserType) => {
+    if (process.env.NEXT_PUBLIC_MOCK_MODE === "true") {
+      setUserType(type);
+      return;
+    }
+
     // Check if browser supports geolocation
     if (!navigator.geolocation) {
       alert("Geolocation is not supported by your browser");

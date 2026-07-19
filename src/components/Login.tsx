@@ -4,7 +4,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { API_URL, AUTH_TOKEN } from "@/lib/constants";
-import { Driver, Rider, UserType } from "@/lib/types";
+import {
+  CarPackageSlug,
+  Driver,
+  DriverTier,
+  Rider,
+  UserType,
+} from "@/lib/types";
 import { fetchWithAuth } from "@/lib/contracts/http";
 
 interface LoginProps {
@@ -30,6 +36,35 @@ export function Login({
     if (isSubmitting) return;
     setError(null);
     setIsSubmitting(true);
+
+    if (process.env.NEXT_PUBLIC_MOCK_MODE === "true") {
+      const mockRider: Rider = {
+        id: "1",
+        name: "Xerdin Ludac",
+        email: "rider@example.com",
+        phone: "1234567890",
+        profilePicture: "",
+      };
+
+      const mockDriver: Driver = {
+        id: "2",
+        name: "Hector Miles",
+        email: "driver@example.com",
+        phone: "1234567890",
+        profilePicture: "",
+        carModel: "Toyota Camry SE",
+        carPlate: "ABC-123",
+        carColor: "Red",
+        currentRating: 4.5,
+        totalCompletedTrips: 431,
+        packageSlug: CarPackageSlug.SEDAN,
+        tier: DriverTier.SILVER,
+      };
+
+      localStorage.setItem(AUTH_TOKEN, "mock-token");
+      onSuccess(userType === "driver" ? mockDriver : mockRider);
+      return;
+    }
 
     try {
       const loginRes = await fetch(`${API_URL}/auth/login`, {
